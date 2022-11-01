@@ -5,7 +5,7 @@ use crate::{
     display::{Display, DISPLAY_HEIGHT, DISPLAY_WIDTH, VRAM},
     error::EmulatorError,
     opcode::OpCode,
-    registers::{Reg, Registers},
+    registers::Registers,
 };
 
 const STACK_COUNT: usize = 12;
@@ -60,10 +60,12 @@ impl Emulator {
         let mut event_pump = self.context.event_pump().unwrap();
         //loop {
         // emulate cycle
-        for _ in [0] {
+        for _ in [0, 1, 2, 3, 4] {
             if let Err(e) = self.cycle() {
-                println!("Ran into error: {:#?}", e);
+                panic!("Ran into error: {:#?}", e);
             }
+
+            println!("{:#?}", self.registers);
         }
 
         let mut i: usize = 0;
@@ -123,6 +125,7 @@ impl Emulator {
     fn exec_opcode(&mut self, op: OpCode) -> Result<(), EmulatorError> {
         match op {
             OpCode::SetVX { register, value } => self.registers.set(register, value),
+            OpCode::ANNN(nnn) => self.registers.set_i(nnn),
         }
 
         Ok(())

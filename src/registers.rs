@@ -61,6 +61,14 @@ impl Registers {
         self.pc += 0x2;
     }
 
+    pub fn get_i(&self) -> u16 {
+        self.i
+    }
+
+    pub fn set_i(&mut self, value: u16) {
+        self.i = value;
+    }
+
     pub fn get(&self, reg: Reg) -> u8 {
         let i: usize = reg.into();
         *self.inner.get(i).expect("Reg doesnt exist")
