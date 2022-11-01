@@ -1,52 +1,73 @@
-pub struct Registers {
-    pub v0: u8,
-    pub v1: u8,
-    pub v2: u8,
-    pub v3: u8,
-    pub v4: u8,
-    pub v5: u8,
-    pub v6: u8,
-    pub v7: u8,
-    pub v8: u8,
-    pub v9: u8,
-    pub va: u8,
-    pub vb: u8,
-    pub vc: u8,
-    pub vd: u8,
-    pub ve: u8,
+#[derive(Debug)]
+pub enum Reg {
+    V0,
+    V1,
+    V2,
+}
 
+impl Into<usize> for Reg {
+    fn into(self) -> usize {
+        match self {
+            Self::V0 => 0,
+            Self::V1 => 1,
+            Self::V2 => 2,
+        }
+    }
+}
+
+impl Into<Reg> for u8 {
+    fn into(self) -> Reg {
+        match self {
+            0x0 => Reg::V0,
+            0x1 => Reg::V1,
+            0x2 => Reg::V2,
+            _ => panic!("Unknown register V{:x}", self)
+        }
+    }
+}
+
+const REG_COUNT: usize = 16;
+
+pub struct Registers {
+    inner: [u8; REG_COUNT],
     // default: used as carry flag
     // subtraction mode: no borrow flag
     // drawing: used for collision detection
-    pub vf: u8,
 
     // program counter
-    pub pc: u16,
+    pc: u16,
     // index  register - 12 bits wide
-    pub i: u16,
+    i: u16,
 }
 
 impl Registers {
     pub fn new() -> Self {
+        let inner = [0; REG_COUNT];
         Self {
-            v0: 0,
-            v1: 0,
-            v2: 0,
-            v3: 0,
-            v4: 0,
-            v5: 0,
-            v6: 0,
-            v7: 0,
-            v8: 0,
-            v9: 0,
-            va: 0,
-            vb: 0,
-            vc: 0,
-            vd: 0,
-            ve: 0,
-            vf: 0,
+            inner,
             pc: 0x200,
             i: 0
         }
     }
+
+    pub fn pc(&self) -> u16 {
+        self.pc
+    }
+
+    // move pc forward 2 bytes
+    pub fn advance_pc(&mut self) {
+        // TODO bounds a check
+        self.pc += 0x2;
+    }
+
+    pub fn get(&self, reg: Reg) -> u8 {
+        let i: usize = reg.into();
+        *self.inner.get(i).expect("Reg doesnt exist")
+    }
+
+    pub fn set(&mut self, reg: Reg, value: u8) {
+        let i: usize = reg.into();
+        *self.inner.get_mut(i).expect("Reg doesnt exist") = value;
+    }
+
 }
