@@ -1,11 +1,12 @@
 use std::{io::{self, BufReader, Read}, fs::File};
 
-use crate::emulator::Emulator;
+use crate::{emulator::Emulator};
 
 mod emulator;
 mod registers;
 mod opcode;
 mod error;
+mod display;
 
 fn main() -> io::Result<()> {
     // Get rom data
