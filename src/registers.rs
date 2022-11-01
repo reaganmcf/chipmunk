@@ -28,6 +28,7 @@ impl Into<Reg> for u8 {
 
 const REG_COUNT: usize = 16;
 
+#[derive(Debug)]
 pub struct Registers {
     inner: [u8; REG_COUNT],
     // default: used as carry flag

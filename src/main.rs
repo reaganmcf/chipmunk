@@ -19,7 +19,7 @@ fn main() -> io::Result<()> {
     
     let mut em = Emulator::new(buffer);
     em.start();
-    println!("Hello, world!");
+    println!("{:#?}", em.registers);
 
     Ok(())
 }

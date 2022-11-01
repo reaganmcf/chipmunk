@@ -1,14 +1,15 @@
-use crate::{registers::Registers, opcode::OpCode, error::EmulatorError};
+use crate::{registers::{Registers, Reg}, opcode::OpCode, error::EmulatorError};
 
 const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;
 
+#[derive(Debug)]
 pub struct Emulator {
     // 0x000 -> 0x1FF = interpter
     // 0x050 -> 0x0A0 = pixel font
     // 0x200 -> 0xFFF = rom and everything else
     memory: [u8; MEM_SIZE], // 4 KB of memory that lives for the entire program
-    registers: Registers,
+    pub registers: Registers,
     stacks: Vec<u16>,
 }
 
@@ -42,8 +43,10 @@ impl Emulator {
     pub fn start(&mut self) {
         //loop {
         // emulate cycle
-        for _ in [0,1,2,3] {
-            self.cycle();
+        for _ in [0] {
+            if let Err(e) = self.cycle() {
+                println!("Ran into error: {:#?}", e);
+            }
         }
 
         // maybe draw? (TODO)
@@ -51,15 +54,16 @@ impl Emulator {
         //}
     }
 
-    fn cycle(&mut self) {
-        let opcode = self.fetch_opcode();
-
+    fn cycle(&mut self) -> Result<(), EmulatorError> {
+        let opcode = self.fetch_opcode()?;
         println!("{:#?}", opcode);
+        self.exec_opcode(opcode)?;
         // fetch opcode
         // decode op code
         // execute op code
         //
         // update timers (TODO)
+        Ok(())
     }
 
     fn fetch_opcode(&mut self) -> Result<OpCode, EmulatorError> {
@@ -74,5 +78,13 @@ impl Emulator {
         self.registers.advance_pc();
 
         opcode
+    }
+
+    fn exec_opcode(&mut self, op: OpCode) -> Result<(), EmulatorError> {
+        match op {
+            OpCode::SetVX { register, value } => self.registers.set(register, value)
+        }
+
+        Ok(())
     }
 }
