@@ -124,7 +124,7 @@ impl Emulator {
 
     fn exec_opcode(&mut self, op: OpCode) -> Result<(), EmulatorError> {
         match op {
-            OpCode::SetVX { register, value } => self.registers.set(register, value),
+            OpCode::_6XNN { register, value } => self.registers.set(register, value),
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
         }
 
