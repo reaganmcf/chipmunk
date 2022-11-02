@@ -126,6 +126,7 @@ impl Emulator {
 
     fn exec_opcode(&mut self, op: OpCode) -> Result<(), EmulatorError> {
         match op {
+            OpCode::_00E0 => self.display.clear(),
             OpCode::_6XNN { register, value } => self.registers.set(register, value),
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
             OpCode::FX0A(dest_reg) => {

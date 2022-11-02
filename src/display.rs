@@ -39,9 +39,7 @@ impl Display {
     // TODO: flickering on WSL?
     // TODO: performance opts?
     pub fn draw(&mut self, vram: VRAM) {
-        self.canvas.set_draw_color(Color::RGB(0, 0, 0));
-        self.canvas.clear();
-        self.canvas.present();
+        self.clear();
 
         self.canvas.set_draw_color(Color::RGB(255, 255, 255));
         for j in 0..DISPLAY_HEIGHT {
@@ -63,6 +61,12 @@ impl Display {
             }
         }
 
+        self.canvas.present();
+    }
+
+    pub fn clear(&mut self) {
+        self.canvas.set_draw_color(Color::RGB(0, 0, 0));
+        self.canvas.clear();
         self.canvas.present();
     }
 }
