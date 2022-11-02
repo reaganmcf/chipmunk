@@ -3,6 +3,7 @@ use crate::{error::EmulatorError, registers::Reg};
 #[derive(Debug)]
 pub enum OpCode {
     _6XNN { register: Reg, value: u8 },
+    FX0A(Reg),
     ANNN(u16),
 }
 
@@ -11,7 +12,7 @@ impl TryInto<OpCode> for u16 {
     fn try_into(self) -> Result<OpCode, Self::Error> {
         let parts = stretch_u16(self);
         match parts {
-            [0x06, x, n1, n2] => {
+            [0x6, x, n1, n2] => {
                 let value = (n1 << 4) | n2;
                 let register = x.into();
 
@@ -21,6 +22,11 @@ impl TryInto<OpCode> for u16 {
                 let nnn = ((n1 as u16) << 8) | ((n2 as u16) << 4) | n3 as u16;
 
                 Ok(OpCode::ANNN(nnn))
+            }
+            [0xf, x, 0x0, 0xa] => {
+                let dest = x.into();
+
+                Ok(OpCode::FX0A(dest))
             }
             _ => Err(EmulatorError::UnknownOpCode(format!("{:x}", self))),
         }

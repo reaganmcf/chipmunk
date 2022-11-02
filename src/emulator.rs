@@ -1,5 +1,5 @@
-use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::{event::Event, EventPump};
 
 use crate::{
     display::{Display, DISPLAY_HEIGHT, DISPLAY_WIDTH, VRAM},
@@ -16,29 +16,33 @@ pub struct Emulator {
     // 0x050 -> 0x0A0 = pixel font
     // 0x200 -> 0xFFF = rom and everything else
     memory: [u8; MEM_SIZE], // 4 KB of memory that lives for the entire program
-    vram: VRAM,
-    context: sdl2::Sdl,
-    display: Display,
     pub registers: Registers,
     stacks: Vec<u16>,
+    vram: VRAM,
+    display: Display,
+    context: sdl2::Sdl,
+    event_pump: EventPump,
 }
 
 impl Emulator {
     pub fn new(rom: Vec<u8>) -> Self {
         // TODO - load rom?
         let memory: [u8; MEM_SIZE] = [0; MEM_SIZE];
-        let vram: VRAM = [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
-        let mut context = sdl2::init().unwrap();
-        let display = Display::new(&mut context);
         let registers = Registers::new();
+        let vram: VRAM = [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
+
+        let mut context = sdl2::init().unwrap();
+        let event_pump = context.event_pump().unwrap();
+        let display = Display::new(&mut context);
 
         let mut emulator = Self {
             memory,
+            registers,
+            stacks: Vec::with_capacity(STACK_COUNT),
             vram,
             display,
             context,
-            registers,
-            stacks: Vec::with_capacity(STACK_COUNT),
+            event_pump,
         };
 
         emulator.load_rom(rom);
@@ -57,14 +61,9 @@ impl Emulator {
     }
 
     pub fn start(&mut self) {
-        let mut event_pump = self.context.event_pump().unwrap();
         //loop {
         // emulate cycle
         for _ in [0, 1, 2, 3, 4] {
-            if let Err(e) = self.cycle() {
-                panic!("Ran into error: {:#?}", e);
-            }
-
             println!("{:#?}", self.registers);
         }
 
@@ -72,7 +71,11 @@ impl Emulator {
         let mut j: usize = 0;
 
         'running: loop {
-            for event in event_pump.poll_iter() {
+            if let Err(e) = self.cycle() {
+                panic!("Ran into error: {:#?}", e);
+            }
+
+            for event in self.event_pump.poll_iter() {
                 match event {
                     Event::Quit { .. }
                     | Event::KeyDown {
@@ -91,9 +94,8 @@ impl Emulator {
             }
 
             self.display.draw(self.vram);
+            //set keys (TODO)
         }
-        // set keys (TODO)
-        //}
     }
 
     fn cycle(&mut self) -> Result<(), EmulatorError> {
@@ -126,6 +128,20 @@ impl Emulator {
         match op {
             OpCode::_6XNN { register, value } => self.registers.set(register, value),
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
+            OpCode::FX0A(dest_reg) => {
+                // TODO - use full hex keyboard
+                loop {
+                    match self.event_pump.wait_event() {
+                        Event::Quit { .. }
+                        | Event::KeyDown {
+                            keycode: Some(Keycode::F),
+                            ..
+                        } => break,
+                        _ => {}
+                    }
+                }
+                self.registers.set(dest_reg, 0xF);
+            }
         }
 
         Ok(())
