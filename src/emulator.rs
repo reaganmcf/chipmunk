@@ -16,23 +16,23 @@ const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;
 const FPS: f32 = 60.0;
 
-const FONT_SET: [u8; 80] =  [
-  0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-  0x20, 0x60, 0x20, 0x20, 0x70, // 1
-  0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-  0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-  0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-  0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-  0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-  0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-  0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-  0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-  0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-  0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-  0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-  0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-  0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-  0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+const FONT_SET: [u8; 80] = [
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 ];
 
 const FONT_SET_START_ADDR: usize = 0x050;
@@ -107,9 +107,6 @@ impl Emulator {
             println!("{:#?}", self.registers);
         }
 
-        let mut i: usize = 0;
-        let mut j: usize = 0;
-
         'running: loop {
             if let Err(e) = self.cycle() {
                 // don't leave audio on before we panic
@@ -127,13 +124,6 @@ impl Emulator {
                     } => break 'running,
                     _ => {}
                 }
-            }
-
-            self.vram[j][i] = true;
-            i += 1;
-            if i % DISPLAY_WIDTH == 0 {
-                i %= DISPLAY_WIDTH;
-                j += 1;
             }
 
             std::thread::sleep(Duration::from_secs_f32(1.0 / FPS));
@@ -190,8 +180,33 @@ impl Emulator {
     fn exec_opcode(&mut self, op: OpCode) -> Result<(), EmulatorError> {
         match op {
             OpCode::_00E0 => self.display.clear(),
+            OpCode::_1NNN(nnn) => self.registers.goto(nnn),
             OpCode::_6XNN { register, value } => self.registers.set(register, value),
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
+            OpCode::DXYN { x, y, height } => {
+                let x = self.registers.get(x);
+                let y = self.registers.get(y);
+                println!("{}", y);
+                let i: usize = self
+                    .registers
+                    .get_i()
+                    .try_into()
+                    .expect("unable to convert u16 to usize");
+
+                for yline in 0..height {
+                    let pixel = self.memory[i + (yline as usize)];
+                    println!("i = {:x}, pixel = {:x}", i, pixel);
+                    for xline in 0..8 {
+                        // dont know for sure, but i think we're only taking first 4 bits
+                        let is_on = pixel & (0x80 >> xline) != 0;
+                        let y_idx = (y + yline) as usize;
+                        let x_idx = (x + xline) as usize;
+
+                        println!("drawing at [{}][{}]", y_idx, x_idx);
+                        self.vram[y_idx][x_idx] = is_on;
+                    }
+                }
+            }
             OpCode::FX0A(dest_reg) => {
                 // TODO - use full hex keyboard
                 loop {
@@ -208,12 +223,16 @@ impl Emulator {
             }
             OpCode::FX18(value) => self.registers.set(Reg::SoundTimer, value),
             OpCode::FX29(reg) => {
-                let character: usize = self.registers.get(reg).try_into().expect("couldn't go from u8 -> usize");
+                let character: usize = self
+                    .registers
+                    .get(reg)
+                    .try_into()
+                    .expect("couldn't go from u8 -> usize");
 
                 // 5 rows per character
                 let offset: usize = character * 0x5;
 
-                let sprite_addr = self.memory[FONT_SET_START_ADDR + offset];
+                let sprite_addr = FONT_SET_START_ADDR + offset;
 
                 self.registers.set_i(sprite_addr as u16);
             }

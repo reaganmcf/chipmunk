@@ -107,6 +107,10 @@ impl Registers {
         self.pc += 0x2;
     }
 
+    pub fn goto(&mut self, address: u16) {
+        self.pc = address;
+    }
+
     pub fn get_i(&self) -> u16 {
         self.i
     }
