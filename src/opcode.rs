@@ -6,6 +6,8 @@ pub enum OpCode {
     _6XNN { register: Reg, value: u8 },
     ANNN(u16),
     FX0A(Reg),
+    FX18(u8),
+    FX29(Reg),
 }
 
 impl TryInto<OpCode> for u16 {
@@ -29,6 +31,15 @@ impl TryInto<OpCode> for u16 {
                 let dest = x.into();
 
                 Ok(OpCode::FX0A(dest))
+            }
+            [0xf, x, 0x1, 0x8] => {
+                let value = x;
+
+                Ok(OpCode::FX18(value))
+            }
+            [0xf, x, 0x2, 0x9] => {
+                let reg = x.into();
+                Ok(OpCode::FX29(reg))
             }
             _ => Err(EmulatorError::UnknownOpCode(format!("{:x}", self))),
         }

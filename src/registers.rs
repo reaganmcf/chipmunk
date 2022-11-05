@@ -16,6 +16,8 @@ pub enum Reg {
     VD,
     VE,
     VF,
+    DelayTimer,
+    SoundTimer
 }
 
 impl Into<usize> for Reg {
@@ -37,6 +39,8 @@ impl Into<usize> for Reg {
             Self::VD => 0xD,
             Self::VE => 0xE,
             Self::VF => 0xF,
+            Self::DelayTimer => 0x10,
+            Self::SoundTimer => 0x11
         }
     }
 }
@@ -60,12 +64,15 @@ impl Into<Reg> for u8 {
             0xD => Reg::VD,
             0xE => Reg::VE,
             0xF => Reg::VF,
+            0x10 => panic!("Should never convert u8 to Reg::DelayTimer"),
+            0x11 => panic!("Should never convert u8 to Reg::SoundTimer"),
             _ => panic!("Unknown register V{:x}", self)
         }
     }
 }
 
-const REG_COUNT: usize = 16;
+const TIMER_COUNT: usize = 2;
+const REG_COUNT: usize = 16 + TIMER_COUNT;
 
 #[derive(Debug)]
 pub struct Registers {
@@ -86,7 +93,7 @@ impl Registers {
         Self {
             inner,
             pc: 0x200,
-            i: 0
+            i: 0,
         }
     }
 

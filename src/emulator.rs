@@ -3,6 +3,8 @@ use std::time::Duration;
 use sdl2::keyboard::Keycode;
 use sdl2::{event::Event, EventPump};
 
+use crate::audio::Audio;
+use crate::registers::Reg;
 use crate::{
     display::{Display, DISPLAY_HEIGHT, DISPLAY_WIDTH, VRAM},
     error::EmulatorError,
@@ -14,6 +16,28 @@ const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;
 const FPS: f32 = 60.0;
 
+const FONT_SET: [u8; 80] =  [
+  0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+  0x20, 0x60, 0x20, 0x20, 0x70, // 1
+  0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+  0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+  0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+  0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+  0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+  0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+  0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+  0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+  0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+  0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+  0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+  0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+  0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+  0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+];
+
+const FONT_SET_START_ADDR: usize = 0x050;
+const FONT_SET_END_ADDR: usize = 0x0A0;
+
 pub struct Emulator {
     // 0x000 -> 0x1FF = interpter
     // 0x050 -> 0x0A0 = pixel font
@@ -22,9 +46,10 @@ pub struct Emulator {
     pub registers: Registers,
     stacks: Vec<u16>,
     vram: VRAM,
-    display: Display,
     context: sdl2::Sdl,
     event_pump: EventPump,
+    display: Display,
+    audio: Audio,
 }
 
 impl Emulator {
@@ -36,21 +61,33 @@ impl Emulator {
 
         let mut context = sdl2::init().unwrap();
         let event_pump = context.event_pump().unwrap();
+
         let display = Display::new(&mut context);
+        let audio = Audio::new(&mut context);
 
         let mut emulator = Self {
             memory,
             registers,
             stacks: Vec::with_capacity(STACK_COUNT),
             vram,
-            display,
             context,
             event_pump,
+            display,
+            audio,
         };
 
+        emulator.load_font();
         emulator.load_rom(rom);
 
         return emulator;
+    }
+
+    fn load_font(&mut self) {
+        let mut i = FONT_SET_START_ADDR;
+        while i < FONT_SET_END_ADDR {
+            self.memory[i] = FONT_SET[i - FONT_SET_START_ADDR];
+            i += 1;
+        }
     }
 
     fn load_rom(&mut self, rom: Vec<u8>) {
@@ -75,6 +112,9 @@ impl Emulator {
 
         'running: loop {
             if let Err(e) = self.cycle() {
+                // don't leave audio on before we panic
+                self.audio.stop();
+
                 panic!("Ran into error: {:#?}", e);
             }
 
@@ -99,7 +139,25 @@ impl Emulator {
             std::thread::sleep(Duration::from_secs_f32(1.0 / FPS));
 
             self.display.draw(self.vram);
+
+            // sound timer
+            self.check_sound();
+
             //set keys (TODO)
+        }
+    }
+
+    // TODO - better name
+    fn check_sound(&mut self) {
+        let sound_timer = self.registers.get(Reg::SoundTimer);
+
+        if sound_timer > 0 {
+            if sound_timer == 1 {
+                self.audio.start();
+            }
+            self.registers.set(Reg::SoundTimer, sound_timer - 1);
+        } else {
+            self.audio.stop();
         }
     }
 
@@ -147,6 +205,17 @@ impl Emulator {
                     }
                 }
                 self.registers.set(dest_reg, 0xF);
+            }
+            OpCode::FX18(value) => self.registers.set(Reg::SoundTimer, value),
+            OpCode::FX29(reg) => {
+                let character: usize = self.registers.get(reg).try_into().expect("couldn't go from u8 -> usize");
+
+                // 5 rows per character
+                let offset: usize = character * 0x5;
+
+                let sprite_addr = self.memory[FONT_SET_START_ADDR + offset];
+
+                self.registers.set_i(sprite_addr as u16);
             }
         }
 
