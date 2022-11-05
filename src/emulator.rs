@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use sdl2::keyboard::Keycode;
 use sdl2::{event::Event, EventPump};
 
@@ -10,6 +12,7 @@ use crate::{
 
 const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;
+const FPS: f32 = 60.0;
 
 pub struct Emulator {
     // 0x000 -> 0x1FF = interpter
@@ -92,6 +95,8 @@ impl Emulator {
                 i %= DISPLAY_WIDTH;
                 j += 1;
             }
+
+            std::thread::sleep(Duration::from_secs_f32(1.0 / FPS));
 
             self.display.draw(self.vram);
             //set keys (TODO)
