@@ -6,6 +6,7 @@ use sdl2::{event::Event, EventPump};
 use crate::audio::Audio;
 use crate::keyboard::Keyboard;
 use crate::registers::Reg;
+use crate::utils::bcd;
 use crate::{
     display::{Display, DISPLAY_HEIGHT, DISPLAY_WIDTH, VRAM},
     error::EmulatorError,
@@ -105,12 +106,6 @@ impl Emulator {
     }
 
     pub fn start(&mut self) {
-        //loop {
-        // emulate cycle
-        for _ in [0, 1, 2, 3, 4] {
-            println!("{:#?}", self.registers);
-        }
-
         'running: loop {
             if let Err(e) = self.cycle() {
                 // don't leave audio on before we panic
@@ -184,13 +179,28 @@ impl Emulator {
     fn exec_opcode(&mut self, op: OpCode) -> Result<(), EmulatorError> {
         match op {
             OpCode::_00E0 => self.display.clear(),
+            OpCode::_00EE => {
+                let ret_address = self.stacks.pop().expect("Must return from a subroutine");
+                self.registers.goto(ret_address);
+            }
             OpCode::_1NNN(nnn) => self.registers.goto(nnn),
-            OpCode::_6XNN { register, value } => self.registers.set(register, value),
+            OpCode::_2NNN(nnn) => {
+                self.stacks.push(self.registers.pc());
+
+                self.registers.goto(nnn)
+            }
+            OpCode::_6XNN { reg, value } => self.registers.set(reg, value),
+            OpCode::_7XNN { reg, value } => {
+                let original = self.registers.get(reg);
+                let new = original + value;
+                self.registers.set(reg, new)
+            }
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
             OpCode::DXYN { x, y, height } => {
+                //println!("{:?}", self.registers);
                 let x = self.registers.get(x);
                 let y = self.registers.get(y);
-                println!("{}", y);
+                //println!("{}", y);
                 let i: usize = self
                     .registers
                     .get_i()
@@ -199,21 +209,29 @@ impl Emulator {
 
                 for yline in 0..height {
                     let pixel = self.memory[i + (yline as usize)];
-                    println!("i = {:x}, pixel = {:x}", i, pixel);
+                    //println!("i = {:x}, pixel = {:x}", i, pixel);
                     for xline in 0..8 {
                         // dont know for sure, but i think we're only taking first 4 bits
                         let is_on = pixel & (0x80 >> xline) != 0;
-                        let y_idx = (y + yline) as usize;
-                        let x_idx = (x + xline) as usize;
+                        let y_idx = (y + yline) as usize % DISPLAY_HEIGHT;
+                        let x_idx = (x + xline) as usize % DISPLAY_WIDTH;
 
-                        println!("drawing at [{}][{}]", y_idx, x_idx);
+                        //println!("drawing at [{}][{}]", y_idx, x_idx);
                         self.vram[y_idx][x_idx] = is_on;
                     }
                 }
+            } 
+            OpCode::FX07(reg) => {
+                let value = self.registers.get(Reg::DelayTimer);
+                self.registers.set(reg, value);
             }
             OpCode::FX0A(dest_reg) => {
                 let val = Keyboard::await_keypress(&mut self.event_pump)?;
                 self.registers.set(dest_reg, val);
+            }
+            OpCode::FX15(reg) => {
+                let value = self.registers.get(reg);
+                self.registers.set(Reg::DelayTimer, value);
             }
             OpCode::FX18(value) => self.registers.set(Reg::SoundTimer, value),
             OpCode::FX29(reg) => {
@@ -229,6 +247,36 @@ impl Emulator {
                 let sprite_addr = FONT_SET_START_ADDR + offset;
 
                 self.registers.set_i(sprite_addr as u16);
+            }
+            OpCode::FX33(reg) => {
+                let val = self.registers.get(reg);
+                let bcd = bcd(val);
+
+                let i: usize = self
+                    .registers
+                    .get_i()
+                    .try_into()
+                    .expect("unable to convert u16 to usize");
+
+                self.memory[i] = bcd[2];
+                self.memory[i + 1] = bcd[1];
+                self.memory[i + 2] = bcd[0];
+            }
+            OpCode::FX65(reg) => {
+                // fill v0 to vreg (inclusive) with values from memory
+                let i: usize = self
+                    .registers
+                    .get_i()
+                    .try_into()
+                    .expect("unable to convert u16 to usize");
+                    
+                let start = 0x0;
+                let end: usize = reg.into();
+                for idx in start..=end {
+                    let reg: Reg = (start + idx).into();
+                    let val = self.memory[i + idx];
+                    self.registers.set(reg, val);
+                }
             }
         }
 

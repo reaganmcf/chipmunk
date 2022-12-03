@@ -9,10 +9,11 @@ mod error;
 mod display;
 mod audio;
 mod keyboard;
+mod utils;
 
 fn main() -> io::Result<()> {
     // Get rom data
-    let f = File::open("/home/rmcf/Code/chipmunk/roms/helloworld.rom")?;
+    let f = File::open("/home/rmcf/Code/chipmunk/roms/pong.rom")?;
     let mut reader = BufReader::new(f);
     let mut buffer = Vec::new();
     

@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum Reg {
     V0,
     V1,
@@ -17,37 +17,37 @@ pub enum Reg {
     VE,
     VF,
     DelayTimer,
-    SoundTimer
+    SoundTimer,
 }
 
-impl Into<usize> for Reg {
-    fn into(self) -> usize {
-        match self {
-            Self::V0 => 0x0,
-            Self::V1 => 0x1,
-            Self::V2 => 0x2,
-            Self::V3 => 0x3,
-            Self::V4 => 0x4,
-            Self::V5 => 0x5,
-            Self::V6 => 0x6,
-            Self::V7 => 0x7,
-            Self::V8 => 0x8,
-            Self::V9 => 0x9,
-            Self::VA => 0xA,
-            Self::VB => 0xB,
-            Self::VC => 0xC,
-            Self::VD => 0xD,
-            Self::VE => 0xE,
-            Self::VF => 0xF,
-            Self::DelayTimer => 0x10,
-            Self::SoundTimer => 0x11
+impl From<Reg> for usize {
+    fn from(reg: Reg) -> usize {
+        match reg {
+            Reg::V0 => 0x0,
+            Reg::V1 => 0x1,
+            Reg::V2 => 0x2,
+            Reg::V3 => 0x3,
+            Reg::V4 => 0x4,
+            Reg::V5 => 0x5,
+            Reg::V6 => 0x6,
+            Reg::V7 => 0x7,
+            Reg::V8 => 0x8,
+            Reg::V9 => 0x9,
+            Reg::VA => 0xA,
+            Reg::VB => 0xB,
+            Reg::VC => 0xC,
+            Reg::VD => 0xD,
+            Reg::VE => 0xE,
+            Reg::VF => 0xF,
+            Reg::DelayTimer => 0x10,
+            Reg::SoundTimer => 0x11,
         }
     }
 }
 
-impl Into<Reg> for u8 {
-    fn into(self) -> Reg {
-        match self {
+impl From<u8> for Reg {
+    fn from(v: u8) -> Reg {
+        match v {
             0x0 => Reg::V0,
             0x1 => Reg::V1,
             0x2 => Reg::V2,
@@ -66,7 +66,33 @@ impl Into<Reg> for u8 {
             0xF => Reg::VF,
             0x10 => panic!("Should never convert u8 to Reg::DelayTimer"),
             0x11 => panic!("Should never convert u8 to Reg::SoundTimer"),
-            _ => panic!("Unknown register V{:x}", self)
+            _ => panic!("Unknown register V{:x}", v),
+        }
+    }
+}
+
+impl From<usize> for Reg {
+    fn from(v: usize) -> Reg {
+        match v {
+            0x0 => Reg::V0,
+            0x1 => Reg::V1,
+            0x2 => Reg::V2,
+            0x3 => Reg::V3,
+            0x4 => Reg::V4,
+            0x5 => Reg::V5,
+            0x6 => Reg::V6,
+            0x7 => Reg::V7,
+            0x8 => Reg::V8,
+            0x9 => Reg::V9,
+            0xA => Reg::VA,
+            0xB => Reg::VB,
+            0xC => Reg::VC,
+            0xD => Reg::VD,
+            0xE => Reg::VE,
+            0xF => Reg::VF,
+            0x10 => panic!("Should never convert u8 to Reg::DelayTimer"),
+            0x11 => panic!("Should never convert u8 to Reg::SoundTimer"),
+            _ => panic!("Unknown register V{:x}", v),
         }
     }
 }
@@ -128,5 +154,4 @@ impl Registers {
         let i: usize = reg.into();
         *self.inner.get_mut(i).expect("Reg doesnt exist") = value;
     }
-
 }

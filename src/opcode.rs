@@ -3,13 +3,20 @@ use crate::{error::EmulatorError, registers::Reg};
 #[derive(Debug)]
 pub enum OpCode {
     _00E0,
+    _00EE,
     _1NNN(u16),
-    _6XNN { register: Reg, value: u8 },
+    _2NNN(u16),
+    _6XNN { reg: Reg, value: u8 },
+    _7XNN { reg: Reg, value: u8 },
     ANNN(u16),
     DXYN { x: Reg, y: Reg, height: u8 },
+    FX07(Reg),
     FX0A(Reg),
+    FX15(Reg),
     FX18(u8),
     FX29(Reg),
+    FX33(Reg),
+    FX65(Reg),
 }
 
 impl TryInto<OpCode> for u16 {
@@ -18,16 +25,28 @@ impl TryInto<OpCode> for u16 {
         let parts = stretch_u16(self);
         match parts {
             [0x0, 0x0, 0xe, 0x0] => Ok(OpCode::_00E0),
+            [0x0, 0x0, 0xe, 0xe] => Ok(OpCode::_00EE),
             [0x1, n1, n2, n3] => {
                 let nnn = ((n1 as u16) << 8) | ((n2 as u16) << 4) | n3 as u16;
 
                 Ok(OpCode::_1NNN(nnn))
             }
+            [0x2, n1, n2, n3] => {
+                let nnn = ((n1 as u16) << 8) | ((n2 as u16) << 4) | n3 as u16;
+
+                Ok(OpCode::_2NNN(nnn))
+            }
             [0x6, x, n1, n2] => {
                 let value = (n1 << 4) | n2;
-                let register = x.into();
+                let reg = x.into();
 
-                Ok(OpCode::_6XNN { register, value })
+                Ok(OpCode::_6XNN { reg, value })
+            }
+            [0x7, x, n1, n2] => {
+                let value = (n1 << 4) | n2;
+                let reg = x.into();
+
+                Ok(OpCode::_6XNN { reg, value })
             }
             [0xa, n1, n2, n3] => {
                 let nnn = ((n1 as u16) << 8) | ((n2 as u16) << 4) | n3 as u16;
@@ -41,10 +60,19 @@ impl TryInto<OpCode> for u16 {
 
                 Ok(OpCode::DXYN { x, y, height })
             }
+            [0xf, x, 0x0, 0x7] => {
+                let reg = x.into();
+
+                Ok(OpCode::FX07(reg))
+            }
             [0xf, x, 0x0, 0xa] => {
                 let dest = x.into();
 
                 Ok(OpCode::FX0A(dest))
+            }
+            [0xf, x, 0x1, 0x5] => {
+                let reg = x.into();
+                Ok(OpCode::FX15(reg))
             }
             [0xf, x, 0x1, 0x8] => {
                 let value = x;
@@ -54,6 +82,14 @@ impl TryInto<OpCode> for u16 {
             [0xf, x, 0x2, 0x9] => {
                 let reg = x.into();
                 Ok(OpCode::FX29(reg))
+            }
+            [0xf, x, 0x3, 0x3] => {
+                let reg = x.into();
+                Ok(OpCode::FX33(reg))
+            }
+            [0xf, x, 0x6, 0x5] => {
+                let reg = x.into();
+                Ok(OpCode::FX65(reg))
             }
             _ => Err(EmulatorError::UnknownOpCode(format!("{:x}", self))),
         }
