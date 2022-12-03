@@ -1,6 +1,6 @@
 use std::{io::{self, BufReader, Read}, fs::File};
 
-use crate::{emulator::Emulator};
+use crate::emulator::Emulator;
 
 mod emulator;
 mod registers;

@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use sdl2::audio::{AudioDevice, AudioSpecDesired, AudioCallback};
 
  struct SquareWave {

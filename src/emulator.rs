@@ -1,7 +1,7 @@
-use std::time::Duration;
 use rand::Rng;
 use sdl2::keyboard::Keycode;
 use sdl2::{event::Event, EventPump};
+use std::time::Duration;
 
 use crate::audio::Audio;
 use crate::keyboard::Keyboard;
@@ -16,7 +16,7 @@ use crate::{
 
 const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;
-const FPS: f32 = 60.0;
+const FPS: f32 = 360.0;
 
 const FONT_SET: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -48,11 +48,9 @@ pub struct Emulator {
     pub registers: Registers,
     stacks: Vec<u16>,
     vram: VRAM,
-    context: sdl2::Sdl,
     event_pump: EventPump,
     display: Display,
     audio: Audio,
-    keyboard: Keyboard,
 }
 
 impl Emulator {
@@ -67,24 +65,21 @@ impl Emulator {
 
         let display = Display::new(&mut context);
         let audio = Audio::new(&mut context);
-        let keyboard = Keyboard::new();
 
         let mut emulator = Self {
             memory,
             registers,
             stacks: Vec::with_capacity(STACK_COUNT),
             vram,
-            context,
             event_pump,
             display,
             audio,
-            keyboard,
         };
 
         emulator.load_font();
         emulator.load_rom(rom);
 
-        return emulator;
+        emulator
     }
 
     fn load_font(&mut self) {
@@ -166,7 +161,6 @@ impl Emulator {
         println!("{:#?}", opcode);
         self.exec_opcode(opcode)?;
 
-        // update timers (TODO)
         Ok(())
     }
 
@@ -229,6 +223,28 @@ impl Emulator {
                 let value = val_x & val_y;
                 self.registers.set(x, value);
             }
+            OpCode::_8XY4 { x, y } => {
+                let val_x = self.registers.get(x);
+                let val_y = self.registers.get(y);
+
+                let (value, did_overflow) = val_x.overflowing_add(val_y);
+                self.registers.set(x, value);
+
+                if did_overflow {
+                    self.registers.set(Reg::VF, 1);
+                }
+            }
+            OpCode::_8XY5 { x, y } => {
+                let val_x = self.registers.get(x);
+                let val_y = self.registers.get(y);
+
+                let (value, did_overflow) = val_x.overflowing_sub(val_y);
+                self.registers.set(x, value);
+
+                if did_overflow {
+                    self.registers.set(Reg::VF, 1);
+                }
+            }
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
             OpCode::EXA1(reg) => {
                 let expected_key = self.registers.get(reg);
@@ -263,13 +279,13 @@ impl Emulator {
                         let y_idx = (y + yline) as usize % DISPLAY_HEIGHT;
                         let x_idx = (x + xline) as usize % DISPLAY_WIDTH;
 
-                        self.vram[y_idx][x_idx] = (self.vram[y_idx][x_idx] == true) ^ is_on;
+                        self.vram[y_idx][x_idx] = self.vram[y_idx][x_idx] ^ is_on;
 
                         //println!("drawing at [{}][{}]", y_idx, x_idx);
                         //self.vram[y_idx][x_idx] = is_on;
                     }
                 }
-            } 
+            }
             OpCode::FX07(reg) => {
                 let value = self.registers.get(Reg::DelayTimer);
                 self.registers.set(reg, value);
@@ -318,7 +334,7 @@ impl Emulator {
                     .get_i()
                     .try_into()
                     .expect("unable to convert u16 to usize");
-                    
+
                 let start = 0x0;
                 let end: usize = reg.into();
                 for idx in start..=end {

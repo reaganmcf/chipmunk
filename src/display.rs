@@ -1,9 +1,6 @@
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
-use std::time::Duration;
 
 pub const DISPLAY_HEIGHT: usize = 32;
 pub const DISPLAY_WIDTH: usize = 64;
@@ -39,8 +36,6 @@ impl Display {
     // TODO: flickering on WSL?
     // TODO: performance opts?
     pub fn draw(&mut self, vram: VRAM) {
-        self.clear();
-
         self.canvas.set_draw_color(Color::RGB(255, 255, 255));
         for j in 0..DISPLAY_HEIGHT {
             for i in 0..DISPLAY_WIDTH {
