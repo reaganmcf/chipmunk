@@ -8,6 +8,7 @@ mod opcode;
 mod error;
 mod display;
 mod audio;
+mod keyboard;
 
 fn main() -> io::Result<()> {
     // Get rom data

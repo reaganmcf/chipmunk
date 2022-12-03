@@ -4,6 +4,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::{event::Event, EventPump};
 
 use crate::audio::Audio;
+use crate::keyboard::Keyboard;
 use crate::registers::Reg;
 use crate::{
     display::{Display, DISPLAY_HEIGHT, DISPLAY_WIDTH, VRAM},
@@ -50,6 +51,7 @@ pub struct Emulator {
     event_pump: EventPump,
     display: Display,
     audio: Audio,
+    keyboard: Keyboard,
 }
 
 impl Emulator {
@@ -64,6 +66,7 @@ impl Emulator {
 
         let display = Display::new(&mut context);
         let audio = Audio::new(&mut context);
+        let keyboard = Keyboard::new();
 
         let mut emulator = Self {
             memory,
@@ -74,6 +77,7 @@ impl Emulator {
             event_pump,
             display,
             audio,
+            keyboard,
         };
 
         emulator.load_font();
@@ -208,18 +212,8 @@ impl Emulator {
                 }
             }
             OpCode::FX0A(dest_reg) => {
-                // TODO - use full hex keyboard
-                loop {
-                    match self.event_pump.wait_event() {
-                        Event::Quit { .. }
-                        | Event::KeyDown {
-                            keycode: Some(Keycode::F),
-                            ..
-                        } => break,
-                        _ => {}
-                    }
-                }
-                self.registers.set(dest_reg, 0xF);
+                let val = Keyboard::await_keypress(&mut self.event_pump)?;
+                self.registers.set(dest_reg, val);
             }
             OpCode::FX18(value) => self.registers.set(Reg::SoundTimer, value),
             OpCode::FX29(reg) => {
