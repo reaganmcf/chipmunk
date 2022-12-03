@@ -1,5 +1,5 @@
 use std::time::Duration;
-
+use rand::Rng;
 use sdl2::keyboard::Keycode;
 use sdl2::{event::Event, EventPump};
 
@@ -131,7 +131,10 @@ impl Emulator {
 
             // sound timer
             self.check_sound();
+            // delay timer
+            self.check_delay();
 
+            //maybe dont actually need?
             //set keys (TODO)
         }
     }
@@ -147,6 +150,14 @@ impl Emulator {
             self.registers.set(Reg::SoundTimer, sound_timer - 1);
         } else {
             self.audio.stop();
+        }
+    }
+
+    fn check_delay(&mut self) {
+        let delay_timer = self.registers.get(Reg::DelayTimer);
+
+        if delay_timer > 0 {
+            self.registers.set(Reg::DelayTimer, delay_timer - 1);
         }
     }
 
@@ -189,13 +200,49 @@ impl Emulator {
 
                 self.registers.goto(nnn)
             }
+            OpCode::_3XNN { reg, value } => {
+                let x = self.registers.get(reg);
+                if x == value {
+                    self.registers.advance_pc();
+                }
+            }
+            OpCode::_4XNN { reg, value } => {
+                let x = self.registers.get(reg);
+                if x != value {
+                    self.registers.advance_pc();
+                }
+            }
             OpCode::_6XNN { reg, value } => self.registers.set(reg, value),
             OpCode::_7XNN { reg, value } => {
                 let original = self.registers.get(reg);
                 let new = original + value;
                 self.registers.set(reg, new)
             }
+            OpCode::_8XY0 { x, y } => {
+                let y = self.registers.get(y);
+                self.registers.set(x, y);
+            }
+            OpCode::_8XY2 { x, y } => {
+                let val_x = self.registers.get(x);
+                let val_y = self.registers.get(y);
+
+                let value = val_x & val_y;
+                self.registers.set(x, value);
+            }
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
+            OpCode::EXA1(reg) => {
+                let expected_key = self.registers.get(reg);
+                if let Some(pressed_key) = Keyboard::get_keypress(&mut self.event_pump) {
+                    if pressed_key != expected_key {
+                        self.registers.advance_pc();
+                    }
+                }
+            }
+            OpCode::CXNN { reg, value } => {
+                let random_number: u8 = rand::thread_rng().gen();
+                let value = random_number & value;
+                self.registers.set(reg, value);
+            }
             OpCode::DXYN { x, y, height } => {
                 //println!("{:?}", self.registers);
                 let x = self.registers.get(x);
@@ -216,8 +263,10 @@ impl Emulator {
                         let y_idx = (y + yline) as usize % DISPLAY_HEIGHT;
                         let x_idx = (x + xline) as usize % DISPLAY_WIDTH;
 
+                        self.vram[y_idx][x_idx] = (self.vram[y_idx][x_idx] == true) ^ is_on;
+
                         //println!("drawing at [{}][{}]", y_idx, x_idx);
-                        self.vram[y_idx][x_idx] = is_on;
+                        //self.vram[y_idx][x_idx] = is_on;
                     }
                 }
             } 
