@@ -1,5 +1,4 @@
 use crate::{error::EmulatorError, registers::Reg};
-
 #[derive(Debug)]
 pub enum OpCode {
     _00E0,
@@ -22,6 +21,7 @@ pub enum OpCode {
     FX0A(Reg),
     FX15(Reg),
     FX18(u8),
+    FX1E(Reg),
     FX29(Reg),
     FX33(Reg),
     FX65(Reg),
@@ -45,7 +45,7 @@ impl TryInto<OpCode> for u16 {
     type Error = EmulatorError;
     fn try_into(self) -> Result<OpCode, Self::Error> {
         let parts = stretch_u16(self);
-                
+
         println!("raw code = {:?}", parts);
         match parts {
             [0x0, 0x0, 0xe, 0x0] => Ok(OpCode::_00E0),
@@ -149,6 +149,11 @@ impl TryInto<OpCode> for u16 {
                 let value = x;
 
                 Ok(OpCode::FX18(value))
+            }
+            [0xf, x, 0x1, 0xe] => {
+                let reg = x.into();
+
+                Ok(OpCode::FX1E(reg))
             }
             [0xf, x, 0x2, 0x9] => {
                 let reg = x.into();

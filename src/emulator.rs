@@ -328,6 +328,11 @@ impl Emulator {
                 self.registers.set(Reg::DelayTimer, value);
             }
             OpCode::FX18(value) => self.registers.set(Reg::SoundTimer, value),
+            OpCode::FX1E(reg) => {
+                let i = self.registers.get_i();
+                let val: u16 = self.registers.get(reg).try_into().expect("unable to convert u8 to u16"); 
+                self.registers.set_i(i + val);
+            }
             OpCode::FX29(reg) => {
                 let character: usize = self
                     .registers
