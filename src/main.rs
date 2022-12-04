@@ -26,7 +26,15 @@ struct Args {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Run a rom
-    Run { rom: String },
+    Run {
+        rom: String,
+        #[arg(
+            short,
+            long,
+            help = "Enable debugging (waits for 'f' keypress between cycles)"
+        )]
+        debug: bool,
+    },
     /// Disassemble a rom for debugging
     Dis { rom: String },
 }
@@ -43,9 +51,9 @@ fn main() -> io::Result<()> {
     let args = Args::parse();
 
     match args.command {
-        Commands::Run { rom } => {
+        Commands::Run { rom, debug } => {
             let buffer = open_rom(rom)?;
-            let mut em = Emulator::new(buffer);
+            let mut em = Emulator::new(buffer, debug);
             em.start();
         }
         Commands::Dis { rom } => {

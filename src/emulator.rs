@@ -51,10 +51,13 @@ pub struct Emulator {
     event_pump: EventPump,
     display: Display,
     audio: Audio,
+
+    // Debug mode will wait each cycle for "f" to be pressed before continuing
+    debug: bool,
 }
 
 impl Emulator {
-    pub fn new(rom: Vec<u8>) -> Self {
+    pub fn new(rom: Vec<u8>, debug: bool) -> Self {
         // TODO - load rom?
         let memory: [u8; MEM_SIZE] = [0; MEM_SIZE];
         let registers = Registers::new();
@@ -74,6 +77,7 @@ impl Emulator {
             event_pump,
             display,
             audio,
+            debug,
         };
 
         emulator.load_font();
@@ -160,6 +164,19 @@ impl Emulator {
         let opcode = self.fetch_opcode()?;
         println!("{:#?}", opcode);
         self.exec_opcode(opcode)?;
+
+        if self.debug {
+            loop {
+                match Keyboard::await_keypress(&mut self.event_pump) {
+                    Ok(0xf) => break,
+                    Err(e) => {
+                        println!("{:#?}", e);
+                        return Err(e);
+                    }
+                    _ => {}
+                }
+            }
+        }
 
         Ok(())
     }

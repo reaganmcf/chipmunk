@@ -11,6 +11,7 @@ impl Keyboard {
             match event_pump.wait_event() {
                 Event::Quit { .. } => return Err(EmulatorError::Exit),
                 Event::KeyDown { keycode, .. } => match keycode {
+                    Some(Keycode::Escape) => return Err(EmulatorError::Exit),
                     Some(Keycode::Num0) => return Ok(0x0),
                     Some(Keycode::Num1) => return Ok(0x1),
                     Some(Keycode::Num2) => return Ok(0x2),
