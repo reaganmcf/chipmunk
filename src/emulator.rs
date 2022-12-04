@@ -52,13 +52,14 @@ pub struct Emulator {
     display: Display,
     audio: Audio,
 
+    draw_flag: bool,
+
     // Debug mode will wait each cycle for "f" to be pressed before continuing
     debug: bool,
 }
 
 impl Emulator {
     pub fn new(rom: Vec<u8>, debug: bool) -> Self {
-        // TODO - load rom?
         let memory: [u8; MEM_SIZE] = [0; MEM_SIZE];
         let registers = Registers::new();
         let vram: VRAM = [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
@@ -76,6 +77,7 @@ impl Emulator {
             vram,
             event_pump,
             display,
+            draw_flag: false,
             audio,
             debug,
         };
@@ -125,8 +127,10 @@ impl Emulator {
             }
 
             std::thread::sleep(Duration::from_secs_f32(1.0 / FPS));
-
-            self.display.draw(self.vram);
+            if self.draw_flag {
+                self.display.draw(self.vram);
+                self.draw_flag = false;
+            }
 
             // sound timer
             self.check_sound();
@@ -226,7 +230,7 @@ impl Emulator {
             OpCode::_6XNN { reg, value } => self.registers.set(reg, value),
             OpCode::_7XNN { reg, value } => {
                 let original = self.registers.get(reg);
-                let new = original + value;
+                let new = original.wrapping_add(value);
                 self.registers.set(reg, new)
             }
             OpCode::_8XY0 { x, y } => {

@@ -39,7 +39,7 @@ impl Display {
         self.canvas.set_draw_color(Color::RGB(255, 255, 255));
         for j in 0..DISPLAY_HEIGHT {
             for i in 0..DISPLAY_WIDTH {
-                if vram[j][i] == true {
+                if vram[j][i] {
                     self.canvas.set_draw_color(Color::RGB(255, 255, 255));
                 } else {
                     self.canvas.set_draw_color(Color::RGB(0, 0, 0));

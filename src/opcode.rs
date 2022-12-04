@@ -66,7 +66,7 @@ impl TryInto<OpCode> for u16 {
                 let value = (n1 << 4) | n2;
                 let reg = x.into();
 
-                Ok(OpCode::_6XNN { reg, value })
+                Ok(OpCode::_7XNN { reg, value })
             }
             [0x8, x, y, 0x0] => {
                 let x = x.into();
