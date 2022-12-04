@@ -27,10 +27,26 @@ pub enum OpCode {
     FX65(Reg),
 }
 
+// TODO Finish these
+impl std::fmt::Display for OpCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OpCode::_00E0 => f.write_str("Clears the screen"),
+            OpCode::_00EE => f.write_str("Returns from a subroutine"),
+            OpCode::_1NNN(nnn) => f.write_str(&format!("Jumps to address {}", nnn)),
+            OpCode::_2NNN(nnn) => f.write_str(&format!("Calls subroutine at {}", nnn)),
+            OpCode::_3XNN { reg, value } => f.write_str(&format!("if ({:?} == {})", reg, value)),
+            _ => f.write_str(&format!("Don't know what {:#?} is", self)),
+        }
+    }
+}
+
 impl TryInto<OpCode> for u16 {
     type Error = EmulatorError;
     fn try_into(self) -> Result<OpCode, Self::Error> {
         let parts = stretch_u16(self);
+                
+        println!("raw code = {:?}", parts);
         match parts {
             [0x0, 0x0, 0xe, 0x0] => Ok(OpCode::_00E0),
             [0x0, 0x0, 0xe, 0xe] => Ok(OpCode::_00EE),

@@ -180,7 +180,10 @@ impl Emulator {
                     _ => {}
                 }
             }
+
+            println!("{:#?}", self.registers);
         }
+
 
         Ok(())
     }
@@ -281,30 +284,35 @@ impl Emulator {
                 self.registers.set(reg, value);
             }
             OpCode::DXYN { x, y, height } => {
-                //println!("{:?}", self.registers);
                 let x = self.registers.get(x);
                 let y = self.registers.get(y);
-                //println!("{}", y);
                 let i: usize = self
                     .registers
                     .get_i()
                     .try_into()
                     .expect("unable to convert u16 to usize");
 
+                println!("i as usize = {}", i);
+
                 for yline in 0..height {
                     let pixel = self.memory[i + (yline as usize)];
-                    //println!("i = {:x}, pixel = {:x}", i, pixel);
                     for xline in 0..8 {
-                        // dont know for sure, but i think we're only taking first 4 bits
-                        let is_on = pixel & (0x80 >> xline) != 0;
-                        let y_idx = (y + yline) as usize % DISPLAY_HEIGHT;
-                        let x_idx = (x + xline) as usize % DISPLAY_WIDTH;
+                        let is_on = (pixel & (0x80 >> xline)) != 0;
+                        let y_usize: usize = (y + yline).try_into().expect("unable to convert u8 to usize");
+                        let x_usize: usize = (x + xline).try_into().expect("unable to convert u8 to usize");
 
-                        self.vram[y_idx][x_idx] = self.vram[y_idx][x_idx] ^ is_on;
+                        let y_idx = y_usize % DISPLAY_HEIGHT;
+                        let x_idx = x_usize % DISPLAY_WIDTH;
 
-                        //println!("drawing at [{}][{}]", y_idx, x_idx);
-                        //self.vram[y_idx][x_idx] = is_on;
+                        if is_on {
+                            if self.vram[y_idx][x_idx] { 
+                                self.registers.set(Reg::VF, 1);
+                            }
+                            self.vram[y_idx][x_idx] ^= true;
+                        }
                     }
+
+                    self.draw_flag = true;
                 }
             }
             OpCode::FX07(reg) => {
