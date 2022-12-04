@@ -1,29 +1,60 @@
-use std::{io::{self, BufReader, Read}, fs::File};
+use std::{
+    fs::File,
+    io::{self, BufReader, Read},
+};
 
-use crate::emulator::Emulator;
+use crate::{disassemble::Disassembler, emulator::Emulator};
+use clap::{Parser, Subcommand};
 
-mod emulator;
-mod registers;
-mod opcode;
-mod error;
-mod display;
 mod audio;
+mod disassemble;
+mod display;
+mod emulator;
+mod error;
 mod keyboard;
+mod opcode;
+mod registers;
 mod utils;
 
-fn main() -> io::Result<()> {
-    // Get rom data
-    let f = File::open("/home/rmcf/Code/chipmunk/roms/pong.rom")?;
+#[derive(Parser, Debug)]
+#[command(author, version, about)]
+struct Args {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Run a rom
+    Run { rom: String },
+    /// Disassemble a rom for debugging
+    Dis { rom: String },
+}
+
+fn open_rom(path: String) -> io::Result<Vec<u8>> {
+    let f = File::open(path)?;
     let mut reader = BufReader::new(f);
     let mut buffer = Vec::new();
-    
-    // Read file into vector.
     reader.read_to_end(&mut buffer)?;
-    println!("{:#?}", buffer);
-    
-    let mut em = Emulator::new(buffer);
-    em.start();
-    println!("{:#?}", em.registers);
+    Ok(buffer)
+}
 
+fn main() -> io::Result<()> {
+    let args = Args::parse();
+
+    match args.command {
+        Commands::Run { rom } => {
+            let buffer = open_rom(rom)?;
+            let mut em = Emulator::new(buffer);
+            em.start();
+        }
+        Commands::Dis { rom } => {
+            let buffer = open_rom(rom)?;
+            match Disassembler::disassemble(buffer) {
+                Ok(ops) => println!("{:#?}", ops),
+                Err(e) => eprintln!("{:#?}", e),
+            }
+        }
+    }
     Ok(())
 }
