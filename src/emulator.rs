@@ -111,6 +111,8 @@ impl Emulator {
 
     pub fn start(&mut self) {
         'running: loop {
+            self.keyboard.scan(&mut self.event_pump);
+
             if let Err(e) = self.cycle() {
                 // don't leave audio on before we panic
                 self.audio.stop();
@@ -139,8 +141,6 @@ impl Emulator {
             self.check_sound();
             // delay timer
             self.check_delay();
-
-            self.keyboard.scan(&mut self.event_pump);
         }
     }
 
@@ -271,10 +271,11 @@ impl Emulator {
                     self.registers.set(Reg::VF, 1);
                 }
             }
+            OpCode::_8XYE { x, y } => todo!("nyi"),
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
             OpCode::EXA1(reg) => {
                 let expected_key = self.registers.get(reg);
-                if self.keyboard.is_pressed(&expected_key) {
+                if !self.keyboard.is_pressed(&expected_key) {
                     self.registers.advance_pc();
                 }
             }
