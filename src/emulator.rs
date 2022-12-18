@@ -249,22 +249,18 @@ impl Emulator {
                 let val_y = self.registers.get(y);
 
                 let (value, did_overflow) = val_x.overflowing_add(val_y);
-                self.registers.set(x, value);
 
-                if did_overflow {
-                    self.registers.set(Reg::VF, 1);
-                }
+                self.registers.set(x, value);
+                self.registers.set(Reg::VF, did_overflow.into());
             }
             OpCode::_8XY5 { x, y } => {
                 let val_x = self.registers.get(x);
                 let val_y = self.registers.get(y);
+                
+                let (value, did_borrow) = val_x.overflowing_sub(val_y);
 
-                let (value, did_overflow) = val_x.overflowing_sub(val_y);
                 self.registers.set(x, value);
-
-                if did_overflow {
-                    self.registers.set(Reg::VF, 1);
-                }
+                self.registers.set(Reg::VF, (!did_borrow).into());
             }
             OpCode::_8XYE { x, y } => todo!("nyi"),
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
@@ -289,6 +285,8 @@ impl Emulator {
                     .expect("unable to convert u16 to usize");
 
                 println!("i as usize = {}", i);
+
+                self.registers.set(Reg::VF, 0);
 
                 for yline in 0..height {
                     let pixel = self.memory[i + (yline as usize)];
