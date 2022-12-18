@@ -51,6 +51,7 @@ pub struct Emulator {
     event_pump: EventPump,
     display: Display,
     audio: Audio,
+    keyboard: Keyboard,
 
     draw_flag: bool,
 
@@ -69,6 +70,7 @@ impl Emulator {
 
         let display = Display::new(&mut context);
         let audio = Audio::new(&mut context);
+        let keyboard = Keyboard::new();
 
         let mut emulator = Self {
             memory,
@@ -77,6 +79,7 @@ impl Emulator {
             vram,
             event_pump,
             display,
+            keyboard,
             draw_flag: false,
             audio,
             debug,
@@ -117,16 +120,16 @@ impl Emulator {
 
             for event in self.event_pump.poll_iter() {
                 match event {
-                    Event::Quit { .. }
-                    | Event::KeyDown {
-                        keycode: Some(Keycode::Escape),
-                        ..
-                    } => break 'running,
+                    Event::Quit { .. } => break 'running,
                     _ => {}
                 }
             }
 
-            std::thread::sleep(Duration::from_secs_f32(1.0 / FPS));
+            if self.keyboard.escape_is_pressed() {
+                break 'running;
+            }
+
+            std::thread::sleep(Duration::from_millis(2));
             if self.draw_flag {
                 self.display.draw(self.vram);
                 self.draw_flag = false;
@@ -137,8 +140,7 @@ impl Emulator {
             // delay timer
             self.check_delay();
 
-            //maybe dont actually need?
-            //set keys (TODO)
+            self.keyboard.scan(&mut self.event_pump);
         }
     }
 
@@ -272,10 +274,8 @@ impl Emulator {
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
             OpCode::EXA1(reg) => {
                 let expected_key = self.registers.get(reg);
-                if let Some(pressed_key) = Keyboard::get_keypress(&mut self.event_pump) {
-                    if pressed_key != expected_key {
-                        self.registers.advance_pc();
-                    }
+                if self.keyboard.is_pressed(&expected_key) {
+                    self.registers.advance_pc();
                 }
             }
             OpCode::CXNN { reg, value } => {
