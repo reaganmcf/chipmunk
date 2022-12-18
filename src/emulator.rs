@@ -1,5 +1,4 @@
 use rand::Rng;
-use sdl2::keyboard::Keycode;
 use sdl2::{event::Event, EventPump};
 use std::time::Duration;
 
@@ -16,7 +15,6 @@ use crate::{
 
 const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;
-const FPS: f32 = 360.0;
 
 const FONT_SET: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -120,11 +118,9 @@ impl Emulator {
                 panic!("Ran into error: {:#?}", e);
             }
 
-            for event in self.event_pump.poll_iter() {
-                match event {
-                    Event::Quit { .. } => break 'running,
-                    _ => {}
-                }
+            // probably should put this into a function at some point
+            if let Some(Event::Quit { .. }) = self.event_pump.poll_event() {
+                break 'running;
             }
 
             if self.keyboard.escape_is_pressed() {
@@ -185,7 +181,6 @@ impl Emulator {
 
             println!("{:#?}", self.registers);
         }
-
 
         Ok(())
     }
@@ -299,14 +294,18 @@ impl Emulator {
                     let pixel = self.memory[i + (yline as usize)];
                     for xline in 0..8 {
                         let is_on = (pixel & (0x80 >> xline)) != 0;
-                        let y_usize: usize = (y + yline).try_into().expect("unable to convert u8 to usize");
-                        let x_usize: usize = (x + xline).try_into().expect("unable to convert u8 to usize");
+                        let y_usize: usize = (y + yline)
+                            .try_into()
+                            .expect("unable to convert u8 to usize");
+                        let x_usize: usize = (x + xline)
+                            .try_into()
+                            .expect("unable to convert u8 to usize");
 
                         let y_idx = y_usize % DISPLAY_HEIGHT;
                         let x_idx = x_usize % DISPLAY_WIDTH;
 
                         if is_on {
-                            if self.vram[y_idx][x_idx] { 
+                            if self.vram[y_idx][x_idx] {
                                 self.registers.set(Reg::VF, 1);
                             }
                             self.vram[y_idx][x_idx] ^= true;
@@ -331,7 +330,11 @@ impl Emulator {
             OpCode::FX18(value) => self.registers.set(Reg::SoundTimer, value),
             OpCode::FX1E(reg) => {
                 let i = self.registers.get_i();
-                let val: u16 = self.registers.get(reg).try_into().expect("unable to convert u8 to u16"); 
+                let val: u16 = self
+                    .registers
+                    .get(reg)
+                    .try_into()
+                    .expect("unable to convert u8 to u16");
                 self.registers.set_i(i + val);
             }
             OpCode::FX29(reg) => {
