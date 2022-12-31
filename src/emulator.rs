@@ -346,6 +346,11 @@ impl Emulator {
 
                 let sprite_addr = FONT_SET_START_ADDR + offset;
 
+                // sanity check
+                if sprite_addr >= FONT_SET_END_ADDR {
+                    panic!("character was greater than 0xf");
+                }
+
                 self.registers.set_i(sprite_addr as u16);
             }
             OpCode::FX33(reg) => {
