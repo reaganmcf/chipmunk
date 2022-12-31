@@ -262,7 +262,6 @@ impl Emulator {
                 self.registers.set(x, value);
                 self.registers.set(Reg::VF, (!did_borrow).into());
             }
-            OpCode::_8XYE { x, y } => todo!("nyi"),
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
             OpCode::EXA1(reg) => {
                 let expected_key = self.registers.get(reg);
