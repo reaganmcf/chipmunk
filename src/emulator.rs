@@ -358,9 +358,9 @@ impl Emulator {
                     .try_into()
                     .expect("unable to convert u16 to usize");
 
-                self.memory[i] = bcd[2];
+                self.memory[i] = bcd[0];
                 self.memory[i + 1] = bcd[1];
-                self.memory[i + 2] = bcd[0];
+                self.memory[i + 2] = bcd[2];
             }
             OpCode::FX65(reg) => {
                 // fill v0 to vreg (inclusive) with values from memory
