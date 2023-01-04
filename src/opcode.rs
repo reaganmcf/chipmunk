@@ -20,7 +20,7 @@ pub enum OpCode {
     FX07(Reg),
     FX0A(Reg),
     FX15(Reg),
-    FX18(u8),
+    FX18(Reg),
     FX1E(Reg),
     FX29(Reg),
     FX33(Reg),
@@ -146,9 +146,9 @@ impl TryInto<OpCode> for u16 {
                 Ok(OpCode::FX15(reg))
             }
             [0xf, x, 0x1, 0x8] => {
-                let value = x;
+                let reg = x.into();
 
-                Ok(OpCode::FX18(value))
+                Ok(OpCode::FX18(reg))
             }
             [0xf, x, 0x1, 0xe] => {
                 let reg = x.into();

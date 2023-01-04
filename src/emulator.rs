@@ -324,7 +324,10 @@ impl Emulator {
                 let value = self.registers.get(reg);
                 self.registers.set(Reg::DelayTimer, value);
             }
-            OpCode::FX18(value) => self.registers.set(Reg::SoundTimer, value),
+            OpCode::FX18(reg) => {
+                let value = self.registers.get(reg);
+                self.registers.set(Reg::SoundTimer, value)
+            }
             OpCode::FX1E(reg) => {
                 let i = self.registers.get_i();
                 let val: u16 = self
