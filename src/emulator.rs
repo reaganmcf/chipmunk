@@ -263,19 +263,12 @@ impl Emulator {
             OpCode::_8XY5 { x, y } => {
                 let val_x = self.registers.get(x);
                 let val_y = self.registers.get(y);
-                
                 let (value, did_borrow) = val_x.overflowing_sub(val_y);
 
                 self.registers.set(x, value);
                 self.registers.set(Reg::VF, (!did_borrow).into());
             }
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
-            OpCode::EXA1(reg) => {
-                let expected_key = self.registers.get(reg);
-                if !self.keyboard.is_pressed(&expected_key) {
-                    self.registers.advance_pc();
-                }
-            }
             OpCode::CXNN { reg, value } => {
                 let random_number: u8 = rand::thread_rng().gen();
                 let value = random_number & value;
@@ -315,8 +308,14 @@ impl Emulator {
                             self.vram[y_idx][x_idx] ^= true;
                         }
                     }
+                }
 
-                    self.draw_flag = true;
+                self.draw_flag = true;
+            }
+            OpCode::EXA1(reg) => {
+                let expected_key = self.registers.get(reg);
+                if !self.keyboard.is_pressed(&expected_key) {
+                    self.registers.advance_pc();
                 }
             }
             OpCode::FX07(reg) => {
