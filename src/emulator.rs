@@ -204,7 +204,14 @@ impl Emulator {
 
     fn exec_opcode(&mut self, op: OpCode) -> Result<(), EmulatorError> {
         match op {
-            OpCode::_00E0 => self.display.clear(),
+            OpCode::_00E0 => {
+                for row in self.vram.iter_mut() {
+                    for pixel in row.iter_mut() {
+                        *pixel = false;
+                    }
+                }
+                self.draw_flag = true;
+            }
             OpCode::_00EE => {
                 let ret_address = self.stacks.pop().expect("Must return from a subroutine");
                 self.registers.goto(ret_address);
