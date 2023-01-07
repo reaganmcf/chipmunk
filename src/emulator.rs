@@ -306,8 +306,8 @@ impl Emulator {
                     let pixel = self.memory[i + (yline as usize)];
                     for xline in 0..8 {
                         let is_on = (pixel & (0x80 >> xline)) != 0;
-                        let y_usize: usize = (y + yline) as usize;
-                        let x_usize: usize = (x + xline) as usize;
+                        let y_usize: usize = (y.wrapping_add(yline)) as usize;
+                        let x_usize: usize = (x.wrapping_add(xline)) as usize;
 
                         let y_idx = y_usize % DISPLAY_HEIGHT;
                         let x_idx = x_usize % DISPLAY_WIDTH;
