@@ -127,7 +127,7 @@ impl Emulator {
                 break 'running;
             }
 
-            std::thread::sleep(Duration::from_millis(4));
+            std::thread::sleep(Duration::from_millis(2));
             if self.draw_flag {
                 self.display.draw(self.vram);
                 self.draw_flag = false;
@@ -407,11 +407,18 @@ impl Emulator {
 
                 let start = 0x0;
                 let end: usize = reg.into();
+                
+                let new_i = i + end + 1;
+
                 for idx in start..=end {
                     let reg: Reg = (start + idx).into();
                     let val = self.registers.get(reg);
                     self.memory[i + idx] = val;
                 }
+                
+                // On the original interpreter,
+                // when the operation is done, I = I + X + 1
+                self.registers.set_i(new_i as u16);
             }
             OpCode::FX65(reg) => {
                 // fill v0 to vreg (inclusive) with values from memory
@@ -419,11 +426,18 @@ impl Emulator {
 
                 let start = 0x0;
                 let end: usize = reg.into();
+                
+                let new_i = i + end + 1;
+
                 for idx in start..=end {
                     let reg: Reg = (start + idx).into();
                     let val = self.memory[i + idx];
                     self.registers.set(reg, val);
                 }
+
+                // On the original interpreter,
+                // when the operation is done, I = I + X + 1
+                self.registers.set_i(new_i as u16);
             }
         }
 
