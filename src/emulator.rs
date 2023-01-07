@@ -247,6 +247,13 @@ impl Emulator {
                 let y = self.registers.get(y);
                 self.registers.set(x, y);
             }
+            OpCode::_8XY1 { x, y } => {
+                let val_x = self.registers.get(x);
+                let val_y = self.registers.get(y);
+
+                let value = val_x | val_y;
+                self.registers.set(x, value);
+            }
             OpCode::_8XY2 { x, y } => {
                 let val_x = self.registers.get(x);
                 let val_y = self.registers.get(y);
@@ -289,7 +296,21 @@ impl Emulator {
                 let value = val_x << 1;
                 self.registers.set(x, value);
             }
+            OpCode::_9XY0 { x, y } => {
+                let x = self.registers.get(x);
+                let y = self.registers.get(y);
+
+                if x != y {
+                    self.registers.advance_pc();
+                }
+            }
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
+            OpCode::BNNN(nnn) => {
+                let v0 = self.registers.get(Reg::V0);
+                let address = nnn + (v0 as u16);
+
+                self.registers.goto(address);
+            }
             OpCode::CXNN { reg, value } => {
                 let random_number: u8 = rand::thread_rng().gen();
                 let value = random_number & value;

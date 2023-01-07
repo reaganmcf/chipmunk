@@ -11,12 +11,15 @@ pub enum OpCode {
     _6XNN { reg: Reg, value: u8 },
     _7XNN { reg: Reg, value: u8 },
     _8XY0 { x: Reg, y: Reg },
+    _8XY1 { x: Reg, y: Reg },
     _8XY2 { x: Reg, y: Reg },
     _8XY4 { x: Reg, y: Reg },
     _8XY5 { x: Reg, y: Reg },
     _8XY6 { x: Reg, y: Reg },
     _8XYE { x: Reg, y: Reg },
+    _9XY0 { x: Reg, y: Reg },
     ANNN(u16),
+    BNNN(u16),
     CXNN { reg: Reg, value: u8 },
     DXYN { x: Reg, y: Reg, height: u8 },
     EXA1(Reg),
@@ -86,6 +89,12 @@ impl TryInto<OpCode> for u16 {
 
                 Ok(OpCode::_8XY0 { x, y })
             }
+            [0x8, x, y, 0x1] => {
+                let x = x.into();
+                let y = y.into();
+
+                Ok(OpCode::_8XY1 { x, y })
+            }
             [0x8, x, y, 0x2] => {
                 let x = x.into();
                 let y = y.into();
@@ -116,10 +125,21 @@ impl TryInto<OpCode> for u16 {
 
                 Ok(OpCode::_8XYE { x, y })
             }
+            [0x9, x, y, 0] => {
+                let x = x.into();
+                let y = y.into();
+
+                Ok(OpCode::_9XY0 { x, y})
+            }
             [0xa, n1, n2, n3] => {
                 let nnn = ((n1 as u16) << 8) | ((n2 as u16) << 4) | n3 as u16;
 
                 Ok(OpCode::ANNN(nnn))
+            }
+            [0xb, n1, n2, n3] => {
+                let nnn = ((n1 as u16) << 8) | ((n2 as u16) << 4) | n3 as u16;
+
+                Ok(OpCode::BNNN(nnn))
             }
             [0xe, x, 0xa, 0x1] => {
                 let reg = x.into();
