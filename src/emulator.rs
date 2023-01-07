@@ -230,6 +230,13 @@ impl Emulator {
                     self.registers.advance_pc();
                 }
             }
+            OpCode::_5XY0 { x, y} => {
+                let x = self.registers.get(x);
+                let y = self.registers.get(y);
+                if x == y {
+                    self.registers.advance_pc();
+                }
+            }
             OpCode::_6XNN { reg, value } => self.registers.set(reg, value),
             OpCode::_7XNN { reg, value } => {
                 let original = self.registers.get(reg);
@@ -263,6 +270,24 @@ impl Emulator {
 
                 self.registers.set(x, value);
                 self.registers.set(Reg::VF, (!did_borrow).into());
+            }
+            OpCode::_8XY6 { x, y: _y } => {
+                let val_x = self.registers.get(x);
+                
+                let lsb = 0x1 & val_x;
+                self.registers.set(Reg::VF, lsb);
+
+                let value = val_x >> 1;
+                self.registers.set(x, value);
+            }
+            OpCode::_8XYE { x, y: _y } => {
+                let val_x = self.registers.get(x);
+
+                let msb = 0x80 & val_x;
+                self.registers.set(Reg::VF, msb);
+
+                let value = val_x << 1;
+                self.registers.set(x, value);
             }
             OpCode::ANNN(nnn) => self.registers.set_i(nnn),
             OpCode::CXNN { reg, value } => {
@@ -348,6 +373,18 @@ impl Emulator {
                 self.memory[i] = bcd[0];
                 self.memory[i + 1] = bcd[1];
                 self.memory[i + 2] = bcd[2];
+            }
+            OpCode::FX55(reg) => {
+                // store v0 to vreg (inclusive) into memory
+                let i = self.registers.get_i() as usize;
+
+                let start = 0x0;
+                let end: usize = reg.into();
+                for idx in start..=end {
+                    let reg: Reg = (start + idx).into();
+                    let val = self.registers.get(reg);
+                    self.memory[i + idx] = val;
+                }
             }
             OpCode::FX65(reg) => {
                 // fill v0 to vreg (inclusive) with values from memory
