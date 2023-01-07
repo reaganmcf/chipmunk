@@ -5,9 +5,11 @@ use sdl2::{event::Event, EventPump};
 
 use crate::error::EmulatorError;
 
+const ESCAPE_KEY: u8 = 0xFF;
+
 fn map_keycode(code: Option<Keycode>) -> Option<u8> {
     match code {
-        Some(Keycode::Escape) => Some(0xFF),
+        Some(Keycode::Escape) => Some(ESCAPE_KEY),
         Some(Keycode::Num0) => Some(0x0),
         Some(Keycode::Num1) => Some(0x1),
         Some(Keycode::Num2) => Some(0x2),
@@ -75,26 +77,16 @@ impl Keyboard {
         loop {
             match event_pump.wait_event() {
                 Event::Quit { .. } => return Err(EmulatorError::Exit),
-                Event::KeyDown { keycode, .. } => match keycode {
-                    Some(Keycode::Escape) => return Err(EmulatorError::Exit),
-                    Some(Keycode::Num0) => return Ok(0x0),
-                    Some(Keycode::Num1) => return Ok(0x1),
-                    Some(Keycode::Num2) => return Ok(0x2),
-                    Some(Keycode::Num3) => return Ok(0x3),
-                    Some(Keycode::Num4) => return Ok(0x4),
-                    Some(Keycode::Num5) => return Ok(0x5),
-                    Some(Keycode::Num6) => return Ok(0x6),
-                    Some(Keycode::Num7) => return Ok(0x7),
-                    Some(Keycode::Num8) => return Ok(0x8),
-                    Some(Keycode::Num9) => return Ok(0x9),
-                    Some(Keycode::A) => return Ok(0xA),
-                    Some(Keycode::B) => return Ok(0xB),
-                    Some(Keycode::C) => return Ok(0xC),
-                    Some(Keycode::D) => return Ok(0xD),
-                    Some(Keycode::E) => return Ok(0xE),
-                    Some(Keycode::F) => return Ok(0xF),
-                    _ => {}
-                },
+                Event::KeyDown { keycode, .. } => {
+                    if let Some(keycode) = map_keycode(keycode) {
+                        // Check for escape
+                        if keycode == ESCAPE_KEY {
+                            return Err(EmulatorError::Exit);
+                        } else {
+                            return Ok(keycode);
+                        }
+                    }
+                }
                 _ => {}
             }
         }
