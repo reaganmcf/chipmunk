@@ -186,11 +186,7 @@ impl Emulator {
     }
 
     fn fetch_opcode(&mut self) -> Result<OpCode, EmulatorError> {
-        let index: usize = self
-            .registers
-            .pc()
-            .try_into()
-            .expect("unable to convert u16 to usize");
+        let index = self.registers.pc() as usize;
         let first_half = self.memory[index];
         let second_half = self.memory[index + 0x1];
         let raw_opcode: u16 = u16::from_be_bytes([first_half, second_half]);
@@ -277,13 +273,7 @@ impl Emulator {
             OpCode::DXYN { x, y, height } => {
                 let x = self.registers.get(x);
                 let y = self.registers.get(y);
-                let i: usize = self
-                    .registers
-                    .get_i()
-                    .try_into()
-                    .expect("unable to convert u16 to usize");
-
-                println!("i as usize = {}", i);
+                let i = self.registers.get_i() as usize;
 
                 self.registers.set(Reg::VF, 0);
 
@@ -291,12 +281,8 @@ impl Emulator {
                     let pixel = self.memory[i + (yline as usize)];
                     for xline in 0..8 {
                         let is_on = (pixel & (0x80 >> xline)) != 0;
-                        let y_usize: usize = (y + yline)
-                            .try_into()
-                            .expect("unable to convert u8 to usize");
-                        let x_usize: usize = (x + xline)
-                            .try_into()
-                            .expect("unable to convert u8 to usize");
+                        let y_usize: usize = (y + yline) as usize;
+                        let x_usize: usize = (x + xline) as usize;
 
                         let y_idx = y_usize % DISPLAY_HEIGHT;
                         let x_idx = x_usize % DISPLAY_WIDTH;
@@ -336,19 +322,11 @@ impl Emulator {
             }
             OpCode::FX1E(reg) => {
                 let i = self.registers.get_i();
-                let val: u16 = self
-                    .registers
-                    .get(reg)
-                    .try_into()
-                    .expect("unable to convert u8 to u16");
+                let val = self.registers.get(reg) as u16;
                 self.registers.set_i(i + val);
             }
             OpCode::FX29(reg) => {
-                let character: usize = self
-                    .registers
-                    .get(reg)
-                    .try_into()
-                    .expect("couldn't go from u8 -> usize");
+                let character = self.registers.get(reg) as usize;
 
                 // 5 rows per character
                 let offset: usize = character * 0x5;
@@ -365,12 +343,7 @@ impl Emulator {
             OpCode::FX33(reg) => {
                 let val = self.registers.get(reg);
                 let bcd = bcd(val);
-
-                let i: usize = self
-                    .registers
-                    .get_i()
-                    .try_into()
-                    .expect("unable to convert u16 to usize");
+                let i = self.registers.get_i() as usize;
 
                 self.memory[i] = bcd[0];
                 self.memory[i + 1] = bcd[1];
@@ -378,11 +351,7 @@ impl Emulator {
             }
             OpCode::FX65(reg) => {
                 // fill v0 to vreg (inclusive) with values from memory
-                let i: usize = self
-                    .registers
-                    .get_i()
-                    .try_into()
-                    .expect("unable to convert u16 to usize");
+                let i = self.registers.get_i() as usize;
 
                 let start = 0x0;
                 let end: usize = reg.into();
