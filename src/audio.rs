@@ -1,9 +1,9 @@
-use sdl2::audio::{AudioDevice, AudioSpecDesired, AudioCallback};
+use sdl2::audio::{AudioCallback, AudioDevice, AudioSpecDesired};
 
- struct SquareWave {
+struct SquareWave {
     phase_inc: f32,
     phase: f32,
-    volume: f32
+    volume: f32,
 }
 
 impl AudioCallback for SquareWave {
@@ -23,7 +23,7 @@ impl AudioCallback for SquareWave {
 }
 
 pub struct Audio {
-    device: AudioDevice<SquareWave>
+    device: AudioDevice<SquareWave>,
 }
 
 impl Audio {
@@ -47,9 +47,7 @@ impl Audio {
             })
             .unwrap();
 
-        Self {
-            device
-        }
+        Self { device }
     }
 
     pub fn start(&mut self) {
