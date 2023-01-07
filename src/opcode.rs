@@ -22,6 +22,7 @@ pub enum OpCode {
     BNNN(u16),
     CXNN { reg: Reg, value: u8 },
     DXYN { x: Reg, y: Reg, height: u8 },
+    EX9E(Reg),
     EXA1(Reg),
     FX07(Reg),
     FX0A(Reg),
@@ -140,6 +141,11 @@ impl TryInto<OpCode> for u16 {
                 let nnn = ((n1 as u16) << 8) | ((n2 as u16) << 4) | n3 as u16;
 
                 Ok(OpCode::BNNN(nnn))
+            }
+            [0xe, x, 0x9, 0xe] => {
+                let reg = x.into();
+
+                Ok(OpCode::EX9E(reg))
             }
             [0xe, x, 0xa, 0x1] => {
                 let reg = x.into();

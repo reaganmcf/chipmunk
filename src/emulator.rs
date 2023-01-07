@@ -127,7 +127,7 @@ impl Emulator {
                 break 'running;
             }
 
-            std::thread::sleep(Duration::from_millis(2));
+            std::thread::sleep(Duration::from_millis(4));
             if self.draw_flag {
                 self.display.draw(self.vram);
                 self.draw_flag = false;
@@ -343,6 +343,12 @@ impl Emulator {
                 }
 
                 self.draw_flag = true;
+            }
+            OpCode::EX9E(reg) => {
+                let expected_key = self.registers.get(reg);
+                if self.keyboard.is_pressed(&expected_key) {
+                    self.registers.advance_pc();
+                }
             }
             OpCode::EXA1(reg) => {
                 let expected_key = self.registers.get(reg);
