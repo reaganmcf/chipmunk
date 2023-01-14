@@ -129,7 +129,6 @@ impl Registers {
 
     // move pc forward 2 bytes
     pub fn advance_pc(&mut self) {
-        // TODO bounds a check
         self.pc += 0x2;
     }
 
