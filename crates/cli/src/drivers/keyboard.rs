@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::error::EmulatorError;
+use emulator::EmulatorError;
 use sdl2::keyboard::Keycode;
 use sdl2::{event::Event, EventPump};
 

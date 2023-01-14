@@ -1,8 +1,8 @@
 #![allow(clippy::needless_bool)]
 #![allow(clippy::if_same_then_else)]
 
-mod audio;
 mod display;
+mod audio;
 mod keyboard;
 
 use audio::Sdl2Audio;
@@ -11,7 +11,7 @@ use keyboard::Sdl2Keyboard;
 
 use sdl2::{event::Event, EventPump};
 
-use super::Platform;
+use emulator::{Vram, EmulatorError, Platform};
 
 pub struct Sdl2Platform {
     event_pump: EventPump,
@@ -39,7 +39,7 @@ impl Sdl2Platform {
 }
 
 impl Platform for Sdl2Platform {
-    fn draw(&mut self, vram: crate::emulator::Vram) {
+    fn draw(&mut self, vram: Vram) {
         self.display.draw(vram);
     }
 
@@ -69,7 +69,7 @@ impl Platform for Sdl2Platform {
         }
     }
 
-    fn await_keypress(&mut self) -> Result<u8, crate::error::EmulatorError> {
+    fn await_keypress(&mut self) -> Result<u8, EmulatorError> {
         self.keyboard.await_keypress(&mut self.event_pump)
     }
 }

@@ -2,17 +2,10 @@ use std::{
     fs::File,
     io::{self, BufReader, Read},
 };
-
-use crate::{disassemble::Disassembler, emulator::Emulator};
 use clap::{Parser, Subcommand};
+use drivers::Sdl2Platform;
 
-mod disassemble;
-mod emulator;
-mod error;
-mod opcode;
-mod platform;
-mod registers;
-mod utils;
+mod drivers;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -51,12 +44,12 @@ fn main() -> io::Result<()> {
     match args.command {
         Commands::Run { rom, debug } => {
             let buffer = open_rom(rom)?;
-            let mut em = Emulator::new(buffer, debug);
-            em.start();
+            let platform = Box::new(Sdl2Platform::new());
+            emulator::run(buffer, platform, debug)
         }
         Commands::Dis { rom } => {
             let buffer = open_rom(rom)?;
-            match Disassembler::disassemble(buffer) {
+            match emulator::disassemble(buffer) {
                 Ok(ops) => println!("{:#?}", ops),
                 Err(e) => eprintln!("{:#?}", e),
             }

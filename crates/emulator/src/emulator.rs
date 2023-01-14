@@ -1,15 +1,10 @@
 use rand::Rng;
 use std::time::Duration;
 
-use crate::platform::{self, Platform};
+use crate::platform::{Platform, DISPLAY_WIDTH, DISPLAY_HEIGHT, Vram};
 use crate::registers::Reg;
 use crate::utils::bcd;
 use crate::{error::EmulatorError, opcode::OpCode, registers::Registers};
-
-pub const DISPLAY_HEIGHT: usize = 32;
-pub const DISPLAY_WIDTH: usize = 64;
-// TODO bool should be replaced with u8's and bitwise ops
-pub type Vram = [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
 
 const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;
@@ -52,13 +47,13 @@ pub struct Emulator {
 }
 
 impl Emulator {
-    pub fn new(rom: Vec<u8>, debug: bool) -> Self {
+    pub fn new(rom: Vec<u8>, platform: Box<dyn Platform>, debug: bool) -> Self {
         let memory: [u8; MEM_SIZE] = [0; MEM_SIZE];
         let registers = Registers::new();
         let vram: Vram = [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
 
         let mut emulator = Self {
-            platform: Box::new(platform::Sdl2Platform::new()),
+            platform,
             memory,
             registers,
             stacks: Vec::with_capacity(STACK_COUNT),

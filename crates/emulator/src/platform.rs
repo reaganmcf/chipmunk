@@ -1,8 +1,9 @@
-use crate::{emulator::Vram, error::EmulatorError};
+use crate::error::EmulatorError;
 
-mod sdl2;
-
-pub use self::sdl2::Sdl2Platform;
+pub const DISPLAY_HEIGHT: usize = 32;
+pub const DISPLAY_WIDTH: usize = 64;
+// TODO bool should be replaced with u8's and bitwise ops
+pub type Vram = [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
 
 pub trait Platform {
     fn draw(&mut self, vram: Vram);
