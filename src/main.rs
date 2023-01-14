@@ -6,12 +6,10 @@ use std::{
 use crate::{disassemble::Disassembler, emulator::Emulator};
 use clap::{Parser, Subcommand};
 
-mod audio;
+mod platform;
 mod disassemble;
-mod display;
 mod emulator;
 mod error;
-mod keyboard;
 mod opcode;
 mod registers;
 mod utils;

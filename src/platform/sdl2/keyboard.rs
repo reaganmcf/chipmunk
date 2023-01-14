@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use sdl2::keyboard::Keycode;
 use sdl2::{event::Event, EventPump};
-
 use crate::error::EmulatorError;
 
 const ESCAPE_KEY: u8 = 0xFF;
@@ -30,11 +29,11 @@ fn map_keycode(code: Option<Keycode>) -> Option<u8> {
     }
 }
 
-pub struct Keyboard {
+pub struct Sdl2Keyboard {
     pressed_keys: HashSet<u8>,
 }
 
-impl Keyboard {
+impl Sdl2Keyboard {
     pub fn new() -> Self {
         Self {
             pressed_keys: HashSet::with_capacity(16),
@@ -73,7 +72,7 @@ impl Keyboard {
         self.is_pressed(&0xFF)
     }
 
-    pub fn await_keypress(event_pump: &mut EventPump) -> Result<u8, EmulatorError> {
+    pub fn await_keypress(&self, event_pump: &mut EventPump) -> Result<u8, EmulatorError> {
         loop {
             match event_pump.wait_event() {
                 Event::Quit { .. } => return Err(EmulatorError::Exit),

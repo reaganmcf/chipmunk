@@ -2,18 +2,15 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 
-pub const DISPLAY_HEIGHT: usize = 32;
-pub const DISPLAY_WIDTH: usize = 64;
-// TODO bool should be replaced with u8's and bitwise ops
-pub type VRAM = [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
+use crate::emulator::{DISPLAY_WIDTH, DISPLAY_HEIGHT, VRAM};
 
 const SCALE: usize = 10;
 
-pub struct Display {
+pub struct Sdl2Display {
     canvas: Canvas<sdl2::video::Window>,
 }
 
-impl Display {
+impl Sdl2Display {
     pub fn new(context: &mut sdl2::Sdl) -> Self {
         let video_subsystem = context.video().unwrap();
 

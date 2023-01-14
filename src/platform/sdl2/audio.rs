@@ -22,11 +22,11 @@ impl AudioCallback for SquareWave {
     }
 }
 
-pub struct Audio {
+pub struct Sdl2Audio {
     device: AudioDevice<SquareWave>,
 }
 
-impl Audio {
+impl Sdl2Audio {
     pub fn new(context: &mut sdl2::Sdl) -> Self {
         let audio_subsystem = context.audio().unwrap();
 

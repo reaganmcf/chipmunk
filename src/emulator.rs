@@ -1,17 +1,19 @@
 use rand::Rng;
-use sdl2::{event::Event, EventPump};
 use std::time::Duration;
 
-use crate::audio::Audio;
-use crate::keyboard::Keyboard;
+use crate::platform::{Platform, self};
 use crate::registers::Reg;
 use crate::utils::bcd;
 use crate::{
-    display::{Display, DISPLAY_HEIGHT, DISPLAY_WIDTH, VRAM},
     error::EmulatorError,
     opcode::OpCode,
     registers::Registers,
 };
+
+pub const DISPLAY_HEIGHT: usize = 32;
+pub const DISPLAY_WIDTH: usize = 64;
+// TODO bool should be replaced with u8's and bitwise ops
+pub type VRAM = [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
 
 const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;
@@ -39,6 +41,7 @@ const FONT_SET_START_ADDR: usize = 0x050;
 const FONT_SET_END_ADDR: usize = 0x0A0;
 
 pub struct Emulator {
+    platform: Box<dyn Platform>,
     // 0x000 -> 0x1FF = interpter
     // 0x050 -> 0x0A0 = pixel font
     // 0x200 -> 0xFFF = rom and everything else
@@ -46,11 +49,6 @@ pub struct Emulator {
     pub registers: Registers,
     stacks: Vec<u16>,
     vram: VRAM,
-    event_pump: EventPump,
-    display: Display,
-    audio: Audio,
-    keyboard: Keyboard,
-
     draw_flag: bool,
 
     // Debug mode will wait each cycle for "f" to be pressed before continuing
@@ -63,23 +61,13 @@ impl Emulator {
         let registers = Registers::new();
         let vram: VRAM = [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
 
-        let mut context = sdl2::init().unwrap();
-        let event_pump = context.event_pump().unwrap();
-
-        let display = Display::new(&mut context);
-        let audio = Audio::new(&mut context);
-        let keyboard = Keyboard::new();
-
         let mut emulator = Self {
+            platform: Box::new(platform::Sdl2Platform::new()),
             memory,
             registers,
             stacks: Vec::with_capacity(STACK_COUNT),
             vram,
-            event_pump,
-            display,
-            keyboard,
             draw_flag: false,
-            audio,
             debug,
         };
 
@@ -109,27 +97,22 @@ impl Emulator {
 
     pub fn start(&mut self) {
         'running: loop {
-            self.keyboard.scan(&mut self.event_pump);
+            self.platform.scan_keys();
 
             if let Err(e) = self.cycle() {
                 // don't leave audio on before we panic
-                self.audio.stop();
+                self.platform.stop_beep();
 
                 panic!("Ran into error: {:#?}", e);
             }
 
-            // probably should put this into a function at some point
-            if let Some(Event::Quit { .. }) = self.event_pump.poll_event() {
-                break 'running;
-            }
-
-            if self.keyboard.escape_is_pressed() {
+            if self.platform.should_quit() {
                 break 'running;
             }
 
             std::thread::sleep(Duration::from_millis(2));
             if self.draw_flag {
-                self.display.draw(self.vram);
+                self.platform.draw(self.vram);
                 self.draw_flag = false;
             }
 
@@ -146,11 +129,11 @@ impl Emulator {
 
         if sound_timer > 0 {
             if sound_timer == 1 {
-                self.audio.start();
+                self.platform.start_beep();
             }
             self.registers.set(Reg::SoundTimer, sound_timer - 1);
         } else {
-            self.audio.stop();
+            self.platform.stop_beep();
         }
     }
 
@@ -169,7 +152,7 @@ impl Emulator {
 
         if self.debug {
             loop {
-                match Keyboard::await_keypress(&mut self.event_pump) {
+                match self.platform.await_keypress() {
                     Ok(0xf) => break,
                     Err(e) => {
                         println!("{:#?}", e);
@@ -346,13 +329,13 @@ impl Emulator {
             }
             OpCode::EX9E(reg) => {
                 let expected_key = self.registers.get(reg);
-                if self.keyboard.is_pressed(&expected_key) {
+                if self.platform.key_is_pressed(&expected_key) {
                     self.registers.advance_pc();
                 }
             }
             OpCode::EXA1(reg) => {
                 let expected_key = self.registers.get(reg);
-                if !self.keyboard.is_pressed(&expected_key) {
+                if !self.platform.key_is_pressed(&expected_key) {
                     self.registers.advance_pc();
                 }
             }
@@ -361,7 +344,7 @@ impl Emulator {
                 self.registers.set(reg, value);
             }
             OpCode::FX0A(dest_reg) => {
-                let val = Keyboard::await_keypress(&mut self.event_pump)?;
+                let val = self.platform.await_keypress()?;
                 self.registers.set(dest_reg, val);
             }
             OpCode::FX15(reg) => {
