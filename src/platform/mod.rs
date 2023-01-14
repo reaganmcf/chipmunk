@@ -4,15 +4,6 @@ mod sdl2;
 
 pub use self::sdl2::Sdl2Platform;
 
-//pub trait Display {
-//}
-//
-//pub trait Audio {
-//}
-//
-//pub trait Keyboard {
-//}
-
 pub trait Platform {
     fn draw(&mut self, vram: VRAM);
 

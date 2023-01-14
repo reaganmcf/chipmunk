@@ -6,11 +6,11 @@ use std::{
 use crate::{disassemble::Disassembler, emulator::Emulator};
 use clap::{Parser, Subcommand};
 
-mod platform;
 mod disassemble;
 mod emulator;
 mod error;
 mod opcode;
+mod platform;
 mod registers;
 mod utils;
 

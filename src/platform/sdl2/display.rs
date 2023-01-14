@@ -2,7 +2,7 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 
-use crate::emulator::{DISPLAY_WIDTH, DISPLAY_HEIGHT, VRAM};
+use crate::emulator::{DISPLAY_HEIGHT, DISPLAY_WIDTH, VRAM};
 
 const SCALE: usize = 10;
 

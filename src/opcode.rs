@@ -130,7 +130,7 @@ impl TryInto<OpCode> for u16 {
                 let x = x.into();
                 let y = y.into();
 
-                Ok(OpCode::_9XY0 { x, y})
+                Ok(OpCode::_9XY0 { x, y })
             }
             [0xa, n1, n2, n3] => {
                 let nnn = ((n1 as u16) << 8) | ((n2 as u16) << 4) | n3 as u16;

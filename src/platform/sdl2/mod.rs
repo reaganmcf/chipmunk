@@ -1,12 +1,12 @@
 mod audio;
-mod keyboard;
 mod display;
+mod keyboard;
 
-use display::Sdl2Display;
 use audio::Sdl2Audio;
+use display::Sdl2Display;
 use keyboard::Sdl2Keyboard;
 
-use sdl2::{EventPump, event::Event};
+use sdl2::{event::Event, EventPump};
 
 use super::Platform;
 
@@ -14,7 +14,7 @@ pub struct Sdl2Platform {
     event_pump: EventPump,
     display: display::Sdl2Display,
     audio: Sdl2Audio,
-    keyboard: keyboard::Sdl2Keyboard
+    keyboard: keyboard::Sdl2Keyboard,
 }
 
 impl Sdl2Platform {
@@ -30,7 +30,7 @@ impl Sdl2Platform {
             event_pump,
             display,
             audio,
-            keyboard
+            keyboard,
         }
     }
 }
@@ -58,9 +58,9 @@ impl Platform for Sdl2Platform {
 
     fn should_quit(&mut self) -> bool {
         if self.keyboard.escape_is_pressed() {
-            return true
+            return true;
         } else if let Some(Event::Quit { .. }) = self.event_pump.poll_event() {
-            return true
+            return true;
         } else {
             return false;
         }

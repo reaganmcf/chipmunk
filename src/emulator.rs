@@ -1,14 +1,10 @@
 use rand::Rng;
 use std::time::Duration;
 
-use crate::platform::{Platform, self};
+use crate::platform::{self, Platform};
 use crate::registers::Reg;
 use crate::utils::bcd;
-use crate::{
-    error::EmulatorError,
-    opcode::OpCode,
-    registers::Registers,
-};
+use crate::{error::EmulatorError, opcode::OpCode, registers::Registers};
 
 pub const DISPLAY_HEIGHT: usize = 32;
 pub const DISPLAY_WIDTH: usize = 64;
@@ -213,7 +209,7 @@ impl Emulator {
                     self.registers.advance_pc();
                 }
             }
-            OpCode::_5XY0 { x, y} => {
+            OpCode::_5XY0 { x, y } => {
                 let x = self.registers.get(x);
                 let y = self.registers.get(y);
                 if x == y {
@@ -263,7 +259,7 @@ impl Emulator {
             }
             OpCode::_8XY6 { x, y: _y } => {
                 let val_x = self.registers.get(x);
-                
+
                 let lsb = 0x1 & val_x;
                 self.registers.set(Reg::VF, lsb);
 
@@ -390,7 +386,7 @@ impl Emulator {
 
                 let start = 0x0;
                 let end: usize = reg.into();
-                
+
                 let new_i = i + end + 1;
 
                 for idx in start..=end {
@@ -398,7 +394,7 @@ impl Emulator {
                     let val = self.registers.get(reg);
                     self.memory[i + idx] = val;
                 }
-                
+
                 // On the original interpreter,
                 // when the operation is done, I = I + X + 1
                 self.registers.set_i(new_i as u16);
@@ -409,7 +405,7 @@ impl Emulator {
 
                 let start = 0x0;
                 let end: usize = reg.into();
-                
+
                 let new_i = i + end + 1;
 
                 for idx in start..=end {
