@@ -1,9 +1,5 @@
 use crate::error::EmulatorError;
 
-pub const DISPLAY_HEIGHT: usize = 32;
-pub const DISPLAY_WIDTH: usize = 64;
-// TODO bool should be replaced with u8's and bitwise ops
-pub type Vram = [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
 
 pub trait Platform {
     fn draw(&mut self, vram: Vram);

@@ -1,9 +1,9 @@
+use clap::{Parser, Subcommand};
+use drivers::Sdl2Platform;
 use std::{
     fs::File,
     io::{self, BufReader, Read},
 };
-use clap::{Parser, Subcommand};
-use drivers::Sdl2Platform;
 
 mod drivers;
 
