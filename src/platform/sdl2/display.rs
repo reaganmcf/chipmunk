@@ -1,8 +1,10 @@
+#![allow(clippy::needless_range_loop)]
+
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
 
-use crate::emulator::{DISPLAY_HEIGHT, DISPLAY_WIDTH, VRAM};
+use crate::emulator::{Vram, DISPLAY_HEIGHT, DISPLAY_WIDTH};
 
 const SCALE: usize = 10;
 
@@ -30,7 +32,7 @@ impl Sdl2Display {
     }
 
     // TODO: performance opts?
-    pub fn draw(&mut self, vram: VRAM) {
+    pub fn draw(&mut self, vram: Vram) {
         self.canvas.set_draw_color(Color::RGB(255, 255, 255));
         for j in 0..DISPLAY_HEIGHT {
             for i in 0..DISPLAY_WIDTH {

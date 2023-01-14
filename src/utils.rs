@@ -11,7 +11,7 @@ pub fn bcd(num: u8) -> [u8; 3] {
     for i in 0..3 {
         let digit = curr % 10;
         result[2 - i] = digit as u8;
-        curr = curr / 10;
+        curr /= 10;
     }
 
     result

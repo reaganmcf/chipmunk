@@ -9,7 +9,7 @@ use crate::{error::EmulatorError, opcode::OpCode, registers::Registers};
 pub const DISPLAY_HEIGHT: usize = 32;
 pub const DISPLAY_WIDTH: usize = 64;
 // TODO bool should be replaced with u8's and bitwise ops
-pub type VRAM = [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
+pub type Vram = [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
 
 const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;
@@ -44,7 +44,7 @@ pub struct Emulator {
     memory: [u8; MEM_SIZE], // 4 KB of memory that lives for the entire program
     pub registers: Registers,
     stacks: Vec<u16>,
-    vram: VRAM,
+    vram: Vram,
     draw_flag: bool,
 
     // Debug mode will wait each cycle for "f" to be pressed before continuing
@@ -55,7 +55,7 @@ impl Emulator {
     pub fn new(rom: Vec<u8>, debug: bool) -> Self {
         let memory: [u8; MEM_SIZE] = [0; MEM_SIZE];
         let registers = Registers::new();
-        let vram: VRAM = [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
+        let vram: Vram = [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
 
         let mut emulator = Self {
             platform: Box::new(platform::Sdl2Platform::new()),

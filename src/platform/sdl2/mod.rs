@@ -1,3 +1,6 @@
+#![allow(clippy::needless_bool)]
+#![allow(clippy::if_same_then_else)]
+
 mod audio;
 mod display;
 mod keyboard;
@@ -36,7 +39,7 @@ impl Sdl2Platform {
 }
 
 impl Platform for Sdl2Platform {
-    fn draw(&mut self, vram: crate::emulator::VRAM) {
+    fn draw(&mut self, vram: crate::emulator::Vram) {
         self.display.draw(vram);
     }
 
@@ -58,11 +61,11 @@ impl Platform for Sdl2Platform {
 
     fn should_quit(&mut self) -> bool {
         if self.keyboard.escape_is_pressed() {
-            return true;
-        } else if let Some(Event::Quit { .. }) = self.event_pump.poll_event() {
-            return true;
+            true
+        } else if matches!(self.event_pump.poll_event(), Some(Event::Quit { .. })) {
+            true
         } else {
-            return false;
+            false
         }
     }
 

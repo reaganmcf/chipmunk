@@ -1,3 +1,5 @@
+#![allow(clippy::upper_case_acronyms)]
+
 use crate::{error::EmulatorError, registers::Reg, utils::stretch_u16};
 #[derive(Debug)]
 pub enum OpCode {

@@ -1,11 +1,11 @@
-use crate::{emulator::VRAM, error::EmulatorError};
+use crate::{emulator::Vram, error::EmulatorError};
 
 mod sdl2;
 
 pub use self::sdl2::Sdl2Platform;
 
 pub trait Platform {
-    fn draw(&mut self, vram: VRAM);
+    fn draw(&mut self, vram: Vram);
 
     fn start_beep(&mut self);
     fn stop_beep(&mut self);
