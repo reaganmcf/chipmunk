@@ -1,11 +1,17 @@
 [package]
 name = "chipmunk"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+description = "CHIP8 Emulator built in Rust"
+license = "LICENSE.md"
+keywords = ["emulator", "sdl2", "chipmunk", "chip8"]
+categories = ["command-line-utilities", "emulators", "sdl2"]
+repostiory = "https://github.com/reaganmcf/chipmunk"
+readme = "../../README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-emulator = { path = "../emulator" }
+emulator = { path = "../emulator", version = "1.0.0" }
 clap = { version = "4.0.29", features = ["derive"] }
 sdl2 = "0.35.2"

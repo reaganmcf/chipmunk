@@ -1,7 +1,8 @@
 [package]
-name = "emulator"
-version = "0.1.0"
+name = "chipmunk-backend"
+version = "1.0.0"
 edition = "2021"
+description = "Shared, platform agnostic, backend for the chipmunk emulator"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
