@@ -4,11 +4,18 @@
   <img width="150px" src="https://cdn-icons-png.flaticon.com/512/616/616570.png" />
 </p>
 
-A [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) interpreter written in Rust.
+A [CHIP-8](https://en.wikipedia.org/wiki/CHIP-8) interpreter written in Rust, with a cross-platform architecture at its core.
+
+Supported platforms:
+- Linux, macOS, Windows (via SDL2)
 
 This was a project I built live during many of my programming streams, which you can [find here](https://twitch.tv/reaganmcf_)
 
-### Demo
+### Installation
+
+```console
+cargo install chipmunk-sdl2
+```
 
 ### Roms
 
@@ -34,7 +41,7 @@ Keypad                   Keyboard
 ##### Run a ROM
 
 ```console
-chipmunk run roms/pong.rom
+chipmunk-sdl2 run roms/pong.rom
 ```
 
 ##### Run a ROM in Debug Mode
@@ -42,10 +49,10 @@ chipmunk run roms/pong.rom
 Roms can be ran in debug mode, where the program will wait for `F` (mapped to `V`) to be pressed before moving on the next instruction.
 
 ```console
-chipmunk run --debug roms/pong.rom 
+chipmunk-sdl2 run --debug roms/pong.rom 
 ```
 
 ##### Disassemble a rom
 ```console
-chipmunk dis roms/pong.rom
+chipmunk-sdl2 dis roms/pong.rom
 ```
