@@ -15,9 +15,11 @@ pub enum OpCode {
     _8XY0 { x: Reg, y: Reg },
     _8XY1 { x: Reg, y: Reg },
     _8XY2 { x: Reg, y: Reg },
+    _8XY3 { x: Reg, y: Reg },
     _8XY4 { x: Reg, y: Reg },
     _8XY5 { x: Reg, y: Reg },
     _8XY6 { x: Reg, y: Reg },
+    _8XY7 { x: Reg, y: Reg },
     _8XYE { x: Reg, y: Reg },
     _9XY0 { x: Reg, y: Reg },
     ANNN(u16),
@@ -104,6 +106,12 @@ impl TryInto<OpCode> for u16 {
 
                 Ok(OpCode::_8XY2 { x, y })
             }
+            [0x8, x, y, 0x3] => {
+                let x = x.into();
+                let y = y.into();
+
+                Ok(OpCode::_8XY3 { x, y })
+            }
             [0x8, x, y, 0x4] => {
                 let x = x.into();
                 let y = y.into();
@@ -121,6 +129,12 @@ impl TryInto<OpCode> for u16 {
                 let y = y.into();
 
                 Ok(OpCode::_8XY6 { x, y })
+            }
+            [0x8, x,  y, 0x7] => {
+                let x = x.into();
+                let y = y.into();
+
+                Ok(OpCode::_8XY7 { x, y })
             }
             [0x8, x, y, 0xe] => {
                 let x = x.into();

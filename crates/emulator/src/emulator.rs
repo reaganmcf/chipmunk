@@ -235,6 +235,13 @@ impl Emulator {
                 let value = val_x & val_y;
                 self.registers.set(x, value);
             }
+            OpCode::_8XY3 { x, y } => {
+                let val_x = self.registers.get(x);       
+                let val_y = self.registers.get(y);
+                
+                let value = val_x ^ val_y;
+                self.registers.set(x, value);
+            }
             OpCode::_8XY4 { x, y } => {
                 let val_x = self.registers.get(x);
                 let val_y = self.registers.get(y);
@@ -260,6 +267,14 @@ impl Emulator {
 
                 let value = val_x >> 1;
                 self.registers.set(x, value);
+            }
+            OpCode::_8XY7 { x, y } => {
+                let val_x = self.registers.get(x);
+                let val_y = self.registers.get(y);
+                let (value, did_borrow) = val_y.overflowing_sub(val_x);
+
+                self.registers.set(x, value);
+                self.registers.set(Reg::VF, (!did_borrow).into());
             }
             OpCode::_8XYE { x, y: _y } => {
                 let val_x = self.registers.get(x);
