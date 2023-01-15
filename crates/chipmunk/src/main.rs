@@ -45,11 +45,11 @@ fn main() -> io::Result<()> {
         Commands::Run { rom, debug } => {
             let buffer = open_rom(rom)?;
             let platform = Box::new(Sdl2Platform::new());
-            emulator::run(buffer, platform, debug)
+            chipmunk_backend::run(buffer, platform, debug)
         }
         Commands::Dis { rom } => {
             let buffer = open_rom(rom)?;
-            match emulator::disassemble(buffer) {
+            match chipmunk_backend::disassemble(buffer) {
                 Ok(ops) => println!("{:#?}", ops),
                 Err(e) => eprintln!("{:#?}", e),
             }

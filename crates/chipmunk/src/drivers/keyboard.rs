@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use emulator::EmulatorError;
+use chipmunk_backend::EmulatorError;
 use sdl2::keyboard::Keycode;
 use sdl2::{event::Event, EventPump};
 

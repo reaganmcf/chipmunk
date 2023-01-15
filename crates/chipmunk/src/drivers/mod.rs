@@ -11,7 +11,7 @@ use keyboard::Sdl2Keyboard;
 
 use sdl2::{event::Event, EventPump};
 
-use emulator::{Vram, EmulatorError, Platform};
+use chipmunk_backend::{Vram, EmulatorError, Platform};
 
 pub struct Sdl2Platform {
     event_pump: EventPump,

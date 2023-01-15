@@ -12,6 +12,6 @@ readme = "../../README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-emulator = { path = "../emulator", version = "1.0.0" }
+chipmunk-backend = { path = "../emulator", version = "1.0.0" }
 clap = { version = "4.0.29", features = ["derive"] }
 sdl2 = "0.35.2"
