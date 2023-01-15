@@ -1,10 +1,10 @@
 use rand::Rng;
 use std::time::Duration;
 
-use crate::platform::{Platform, DISPLAY_WIDTH, DISPLAY_HEIGHT, Vram};
 use crate::registers::Reg;
 use crate::utils::bcd;
 use crate::{error::EmulatorError, opcode::OpCode, registers::Registers};
+use crate::{Platform, Vram, DISPLAY_HEIGHT, DISPLAY_WIDTH};
 
 const STACK_COUNT: usize = 12;
 const MEM_SIZE: usize = 4096;

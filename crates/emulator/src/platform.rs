@@ -1,4 +1,4 @@
-use crate::error::EmulatorError;
+use crate::{error::EmulatorError, Vram};
 
 
 pub trait Platform {
